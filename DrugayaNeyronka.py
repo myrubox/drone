@@ -1560,7 +1560,7 @@ class Simulation:
 
     def charge_at_station(self, station_idx: int):
         """Реалистичная зарядка дрона на док-станции с учетом фаз CC и CV."""
-        if self.is_charging or getattr(self, 'has_charged', False):  # Если зарядка уже идет или завершена
+        if self.is_charging or getattr(self, 'has_charged', False):
             self.update_log("Зарядка уже активна или завершена. Повторная зарядка невозможна.")
             return
 
@@ -1574,68 +1574,59 @@ class Simulation:
             self.update_log("Батарея уже полностью заряжена.")
             return
 
+        # Расчет параметров зарядки
         max_power = self.CHARGING_VOLTAGE * self.CHARGING_CURRENT  # Максимальная мощность (Вт)
         efficiency = self.CHARGING_EFFICIENCY  # КПД зарядки
-        energy_needed = self.BATTERY_CAPACITY_WATT_HOURS - self.remaining_capacity_watt_hours  # Требуемая энергия (Вт·ч)
+
+        # Инициализация лога зарядки
+        self.charge_log = {
+            "time": [],
+            "charge_percent": [],
+            "power": [],
+            "remaining_energy": [],
+            "current": [],
+            "voltage": []
+        }
 
         self.update_log(f"Зарядка началась на станции {station_idx + 1}. Текущий заряд: {self.charge * 100:.2f}% "
                         f"({self.remaining_capacity_watt_hours:.2f} Вт·ч).")
 
         self.is_charging = True
-        self._last_elapsed_time = 0  # Инициализация времени симуляции
+        self._last_elapsed_time = 0
         start_time = time.time()
 
-        self.charge_log = {
-            "time": [],
-            "charge_percent": [],
-            "power": [],
-            "remaining_energy": []
-        }
-
         def update_charge():
-            """Обновление состояния зарядки."""
-            nonlocal max_power, energy_needed
+            nonlocal max_power
 
-            # Реальное время с начала зарядки
             elapsed_time_real = time.time() - start_time
-            elapsed_time_sim = elapsed_time_real * self.simulation_speed_multiplier  # Ускорение симуляции
-
-            # Расчет временного шага
+            elapsed_time_sim = elapsed_time_real * self.simulation_speed_multiplier
             time_step = elapsed_time_sim - self._last_elapsed_time
             self._last_elapsed_time = elapsed_time_sim
 
-            # Фаза зарядки и параметры
-            if self.charge < 0.9:  # Фаза CC (постоянный ток)
+            # Фаза зарядки
+            if self.charge < 0.9:
                 power = max_power
                 current = self.CHARGING_CURRENT
                 voltage = power / current if current > 0 else 0
-            else:  # Фаза CV (постоянное напряжение)
+            else:
                 power = max_power * (1 - (self.charge - 0.9) / 0.1)
-                power = max(0, power)  # Не даём мощности уйти в минус
+                power = max(0, power)
                 voltage = self.CHARGING_VOLTAGE
                 current = power / voltage if voltage > 0 else 0
 
-            # Проверка на корректность мощности
             if power <= 0:
                 self.update_log("Ошибка: мощность зарядки стала равна нулю. Завершаем зарядку.")
                 self.complete_charge()
                 return
 
-            # Прирост заряда
-            charge_increment = (power * efficiency * time_step) / 3600  # Вт·ч
+            charge_increment = (power * efficiency * time_step) / 3600
             charge_increment = min(charge_increment,
                                    self.BATTERY_CAPACITY_WATT_HOURS - self.remaining_capacity_watt_hours)
 
-            # Обновление состояния заряда
             self.remaining_capacity_watt_hours += charge_increment
             self.charge = self.remaining_capacity_watt_hours / self.BATTERY_CAPACITY_WATT_HOURS
 
-            # Инициализация списков если нужно
-            if "current" not in self.charge_log:
-                self.charge_log["current"] = []
-            if "voltage" not in self.charge_log:
-                self.charge_log["voltage"] = []
-
+            # Лог зарядки для графика
             self.charge_log["time"].append(elapsed_time_sim)
             self.charge_log["charge_percent"].append(self.charge * 100)
             self.charge_log["power"].append(power)
@@ -1643,19 +1634,18 @@ class Simulation:
             self.charge_log["current"].append(current)
             self.charge_log["voltage"].append(voltage)
 
-            # Логирование данных
             self.update_log(
                 f"Заряд батареи: {self.charge * 100:.2f}% ({self.remaining_capacity_watt_hours:.2f} Вт·ч). "
-                f"Текущая мощность зарядки: {power:.2f} Вт. Ток: {current:.2f} А. Напряжение: {voltage:.2f} В."
+                f"Мощность: {power:.2f} Вт, Ток: {current:.2f} А, Напряжение: {voltage:.2f} В."
             )
 
-            # Проверка завершения зарядки
             if self.charge >= 0.9999:
                 self.complete_charge()
             else:
-                # Планируем следующий вызов
                 interval = int(1000 / self.simulation_speed_multiplier)
                 self.root.after(interval, update_charge)
+
+        update_charge()
 
     def charge_timer(self, remaining_time):
         if remaining_time <= 0 or self.charge >= 1.0:
