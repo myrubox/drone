@@ -203,8 +203,8 @@ class Simulation:
         self.tab_sim = ttk.Frame(self.notebook)
         style = ttk.Style()
         style.configure("TNotebook.Tab", font=('Arial', 14, 'bold'))
-        self.notebook.add(self.tab_params, text="Параметры")
-        self.notebook.add(self.tab_plot, text="График обучения")
+        self.notebook.add(self.tab_params, text="Начальные параметры")
+        self.notebook.add(self.tab_plot, text="Графики")
         self.notebook.add(self.tab_sim, text="Симуляция")
         self.notebook.pack(expand=True, fill='both')
 
@@ -239,7 +239,9 @@ class Simulation:
 
         for i in range(num_samples):
             # Генерация параметров дрона
-            charge = np.random.uniform(0.2, 1.0)
+            battery_capacity = 80.0  # (или self.BATTERY_CAPACITY_WATT_HOURS, если доступно)
+            charge_watt_hours = np.random.uniform(0.2 * battery_capacity, battery_capacity)
+            charge_norm = charge_watt_hours / battery_capacity
             height = np.random.uniform(100, 5000)
 
             # Генерация параметров станций
@@ -264,7 +266,7 @@ class Simulation:
 
             # Формирование входных данных
             X[i, :] = [
-                charge,
+                charge_norm,
                 height / 5000,
                 station_data[0]['dist'] / 3000,
                 station_data[0]['status'],
@@ -364,31 +366,24 @@ class Simulation:
         self.canvas_loss = FigureCanvasTkAgg(self.fig_loss, master=self.figures_frame)
         self.canvas_loss.get_tk_widget().pack(side="top", fill="x", expand=False)
 
-        # График зарядки батареи
+        # График зарядки батареи — только Figure!
         self.fig_charge = Figure(figsize=(8, 4), dpi=100)
-        self.ax_charge_left = self.fig_charge.add_subplot(111)
-        self.ax_charge_right = self.ax_charge_left.twinx()
-
-        self.ax_charge_left.set_title('График зарядки батареи дрона', fontsize=14)
-        self.ax_charge_left.set_xlabel('Время (сек)', fontsize=10)
-        self.ax_charge_left.set_ylabel('Ток и напряжение', fontsize=10, color='tab:blue')
-        self.ax_charge_right.set_ylabel('Заряд батареи (%)', fontsize=10, color='tab:green')
-        self.ax_charge_left.grid(True, linestyle='--', alpha=0.6)
-
         self.canvas_charge = FigureCanvasTkAgg(self.fig_charge, master=self.figures_frame)
         self.canvas_charge.get_tk_widget().pack(side="top", fill="both", expand=True)
 
     def plot_charge_graph(self):
-        """Отображение графика зарядки с током, напряжением и уровнем заряда."""
+        """Обновление графика зарядки с током, напряжением и уровнем заряда, без наложения осей и подписей."""
+        if not hasattr(self, 'fig_charge'):
+            self.init_plot_tab()
+
         if not hasattr(self, 'charge_log') or not self.charge_log["time"]:
             return
 
         times = self.charge_log["time"]
-        percents = self.charge_log["charge_percent"]
+        percents = self.charge_log.get("charge_percent", [])
         currents = self.charge_log.get("current", [])
         voltages = self.charge_log.get("voltage", [])
 
-        # Привести к одинаковой длине
         min_len = min(len(times), len(percents), len(currents), len(voltages))
         if min_len == 0:
             return
@@ -397,36 +392,43 @@ class Simulation:
         currents = currents[:min_len]
         voltages = voltages[:min_len]
 
-        self.ax_charge_left.clear()
-        self.ax_charge_right.clear()
+        # Полностью очищаем фигуру — удаляем все старые оси!
+        self.fig_charge.clf()
 
-        # Фоновые зоны CC и CV
-        cc_end_time = None
-        for i, p in enumerate(percents):
-            if p >= 90:
-                cc_end_time = times[i]
-                break
-        if cc_end_time is None:
-            cc_end_time = times[-1]
-        self.ax_charge_left.axvspan(times[0], cc_end_time, color='lightblue', alpha=0.2, label="Фаза CC")
-        if cc_end_time < times[-1]:
-            self.ax_charge_left.axvspan(cc_end_time, times[-1], color='lightcoral', alpha=0.2, label="Фаза CV")
+        # Создаём оси заново
+        ax_charge = self.fig_charge.add_subplot(111)
+        ax_charge_right = ax_charge.twinx()
 
-        # Линии
-        self.ax_charge_left.plot(times, currents, color='tab:blue', label='Ток зарядки (А)')
-        self.ax_charge_left.plot(times, voltages, color='tab:orange', linestyle='--', label='Напряжение (В)')
-        self.ax_charge_right.plot(times, percents, color='tab:green', label='Заряд (%)')
+        # Линии для тока и напряжения (левая шкала)
+        ax_charge.plot(times, currents, color='tab:red', label='Ток зарядки (А)')
+        ax_charge.plot(times, voltages, color='tab:red', linestyle='--', label='Напряжение (В)')
 
-        self.ax_charge_left.set_ylabel('Ток (А), Напряжение (В)', fontsize=10, color='tab:blue')
-        self.ax_charge_right.set_ylabel('Уровень заряда (%)', fontsize=10, color='tab:green')
-        self.ax_charge_right.set_yticks(np.arange(0, 105, 5))
+        ax_charge.set_ylabel('Ток (А)                Напряжение (В)', fontsize=10)
+        ax_charge.set_xlabel('Время (сек)', fontsize=10)
+        ax_charge.grid(True, linestyle='--', alpha=0.6)
+        ax_charge.set_title('График зарядки батареи дрона', fontsize=14)
 
-        lines_left, labels_left = self.ax_charge_left.get_legend_handles_labels()
-        lines_right, labels_right = self.ax_charge_right.get_legend_handles_labels()
-        self.ax_charge_left.legend(lines_left + lines_right, labels_left + labels_right, loc='upper center', fontsize=8)
+        # Линия уровня заряда (правая шкала)
+        ax_charge_right.plot(times, percents, color='tab:green', label='Заряд (%)')
+        ax_charge_right.set_ylabel('Ёмкость аккумулятора (%)', fontsize=10)
+        ax_charge_right.set_yticks(np.arange(0, 105, 5))
+        ax_charge_right.set_ylim(0, 100)
 
-        self.ax_charge_left.set_xlabel('Время (сек)', fontsize=10)
-        self.ax_charge_left.grid(True, linestyle='--', alpha=0.6)
+        # Фазы CC и CV на шкале заряда
+        ax_charge_right.axhspan(0, 90, color='lightblue', alpha=0.08, zorder=0)
+        ax_charge_right.axhspan(90, 100, color='lightcoral', alpha=0.10, zorder=0)
+        # Подписи фаз
+        ax_charge_right.text(-2, 45, "CC", color="tab:blue",
+                             fontsize=10, fontweight='bold', va='center', ha='left', alpha=0.7, rotation=90,
+                             clip_on=False)
+        ax_charge_right.text(-2, 95, "CV", color="tab:red",
+                             fontsize=10, fontweight='bold', va='center', ha='left', alpha=0.7, rotation=90,
+                             clip_on=False)
+
+        # Общая легенда (объединяем обе оси)
+        lines_left, labels_left = ax_charge.get_legend_handles_labels()
+        lines_right, labels_right = ax_charge_right.get_legend_handles_labels()
+        ax_charge.legend(lines_left + lines_right, labels_left + labels_right, loc='upper right', fontsize=8)
 
         self.canvas_charge.draw()
 
@@ -1063,8 +1065,8 @@ class Simulation:
 
     def generate_drone_params(self) -> np.ndarray:
         """Генерация параметров для нейросети."""
-        params = np.zeros(8)  # Массив из 8 параметров
-        params[0] = self.charge
+        params = np.zeros(8)
+        params[0] = self.remaining_capacity_watt_hours / self.BATTERY_CAPACITY_WATT_HOURS
         params[1] = self.drone_height / 5000
 
         # Расчет параметров для двух станций
@@ -1574,11 +1576,7 @@ class Simulation:
             self.update_log("Батарея уже полностью заряжена.")
             return
 
-        # Расчет параметров зарядки
-        max_power = self.CHARGING_VOLTAGE * self.CHARGING_CURRENT  # Максимальная мощность (Вт)
-        efficiency = self.CHARGING_EFFICIENCY  # КПД зарядки
-
-        # Инициализация лога зарядки
+        # --- Инициализация charge_log для графика ---
         self.charge_log = {
             "time": [],
             "charge_percent": [],
@@ -1587,35 +1585,44 @@ class Simulation:
             "current": [],
             "voltage": []
         }
+        # --------------------------------------------
 
-        self.update_log(f"Зарядка началась на станции {station_idx + 1}. Текущий заряд: {self.charge * 100:.2f}% "
-                        f"({self.remaining_capacity_watt_hours:.2f} Вт·ч).")
+        # Расчет параметров зарядки
+        max_power = self.CHARGING_VOLTAGE * self.CHARGING_CURRENT  # 480 Вт (пример)
+        cv_voltage = 42  # Фиксированное напряжение для CV-фазы
+        efficiency = self.CHARGING_EFFICIENCY
 
         self.is_charging = True
         self._last_elapsed_time = 0
         start_time = time.time()
 
         def update_charge():
-            nonlocal max_power
+            nonlocal max_power, cv_voltage
 
             elapsed_time_real = time.time() - start_time
             elapsed_time_sim = elapsed_time_real * self.simulation_speed_multiplier
             time_step = elapsed_time_sim - self._last_elapsed_time
             self._last_elapsed_time = elapsed_time_sim
 
-            # Фаза зарядки
-            if self.charge < 0.9:
-                power = max_power
-                current = self.CHARGING_CURRENT
-                voltage = power / current if current > 0 else 0
-            else:
-                power = max_power * (1 - (self.charge - 0.9) / 0.1)
-                power = max(0, power)
-                voltage = self.CHARGING_VOLTAGE
-                current = power / voltage if voltage > 0 else 0
+            # CC-фаза (до 90%): 10 А, напряжение фиксированное (или растет, но для простоты 42 В)
+            U_min = 36.0
+            U_max = 42.0
 
-            if power <= 0:
-                self.update_log("Ошибка: мощность зарядки стала равна нулю. Завершаем зарядку.")
+            if self.charge < 0.9:
+                current = self.CHARGING_CURRENT
+                # Линейный рост напряжения в CC-фазе
+                voltage = U_min + (U_max - U_min) * (self.charge / 0.9)
+                voltage = min(voltage, U_max)
+                power = voltage * current
+            else:
+                voltage = U_max
+                # Пропорция оставшегося заряда в CV-фазе
+                cv_progress = (self.charge - 0.9) / 0.1
+                current = max(1.0, self.CHARGING_CURRENT * (1 - cv_progress))
+                power = voltage * current
+
+            if power <= 0 or current <= 0:
+                self.update_log("Ошибка: мощность или ток зарядки стали равны нулю. Завершаем зарядку.")
                 self.complete_charge()
                 return
 
@@ -1626,7 +1633,6 @@ class Simulation:
             self.remaining_capacity_watt_hours += charge_increment
             self.charge = self.remaining_capacity_watt_hours / self.BATTERY_CAPACITY_WATT_HOURS
 
-            # Лог зарядки для графика
             self.charge_log["time"].append(elapsed_time_sim)
             self.charge_log["charge_percent"].append(self.charge * 100)
             self.charge_log["power"].append(power)
@@ -1635,7 +1641,7 @@ class Simulation:
             self.charge_log["voltage"].append(voltage)
 
             self.update_log(
-                f"Заряд батареи: {self.charge * 100:.2f}% ({self.remaining_capacity_watt_hours:.2f} Вт·ч). "
+                f"Заряд: {self.charge * 100:.2f}% ({self.remaining_capacity_watt_hours:.2f} Вт·ч). "
                 f"Мощность: {power:.2f} Вт, Ток: {current:.2f} А, Напряжение: {voltage:.2f} В."
             )
 
@@ -1779,9 +1785,6 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = Simulation(root)
     root.mainloop()
-"""
-После подзарядки на док-станции дрон должен дальше лететь по заданию. Емкость, ампер часы, ватт часы.
-Интерфейс
-"""
+
 
 
