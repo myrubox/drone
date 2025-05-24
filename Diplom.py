@@ -1239,7 +1239,7 @@ class Simulation:
             self.complete_simulation()
             return
 
-        # 4. Если есть промежуточные точки маршрута — переход к следующей
+        # 4. Если есть промежуточные точки маршрута — переход к следующей (оставьте по необходимости)
         if hasattr(self, "route_points") and hasattr(self, "current_route_index"):
             if self.current_route_index + 1 < len(self.route_points):
                 self.current_route_index += 1
@@ -1279,40 +1279,55 @@ class Simulation:
         return best_station, min_energy if best_station is not None else (None, float('inf'))
 
     def check_emergency_landing(self) -> bool:
-        """Проверка необходимости аварийной посадки и делегирование выбора станции."""
+        """Проверка необходимости аварийной посадки для подзарядки.
+           Всегда ориентируется на актуальную цель (конечная точка или стартовая при обратном пути).
+           Сохраняет всю логику выбора станции, резервного режима, и подробное логирование.
+        """
         try:
-            # Проверка, если резервный режим уже активен
             if self.is_forced_landing:
                 return False
 
-            # Рассчитываем энергию до конечной точки
+            # Определяем текущую целевую точку в зависимости от направления
+            if getattr(self, 'returning_home', False):
+                target = self.start_pos
+                target_name = "старта"
+                end_height = self.drone_height  # если требуется вернуться на ту же высоту, что и в начале
+            else:
+                target = self.end_pos
+                target_name = "конечной точки"
+                end_height = 0  # например, посадка на землю
+
+            # Считаем энергозатраты до цели
             energy_to_target = self.calculate_energy_consumption(
-                self.drone_pos, self.end_pos, self.drone_height, 0
+                self.drone_pos, target, self.drone_height, end_height
             )
             available_energy = self.remaining_capacity_watt_hours
 
-            # Логируем доступную энергию и энергию до цели
-            self.update_log(f"Энергия до цели: {energy_to_target:.2f} Дж, доступно: {available_energy:.2f} Дж")
+            self.update_log(
+                f"Проверка заряда: требуется для {target_name} {energy_to_target:.2f} Вт·ч, доступно: {available_energy:.2f} Вт·ч."
+            )
 
-            # Условие: достаточно энергии на полет
-            if energy_to_target < available_energy * 0.8:
-                self.update_log("Энергии достаточно для завершения маршрута. Аварийная посадка не требуется.")
+            # Если энергии хватает с запасом — летим дальше
+            SAFETY_MARGIN = 0.8  # можно вынести в параметры класса
+            if energy_to_target < available_energy * SAFETY_MARGIN:
+                self.update_log(
+                    "Энергии достаточно для завершения текущего участка маршрута. Аварийная посадка не требуется.")
                 return False
 
-            # Попытка выбора станции с использованием нейросети
-            self.update_log("Попытка выбора станции с использованием нейросети...")
+            # Не хватает — выбираем станцию через нейросеть
+            self.update_log("Недостаточно заряда. Попытка выбора станции с использованием нейросети...")
             if self.force_decision():
                 self.update_log("Выбор станции завершен с использованием нейросети.")
                 return True
 
-            # Если нейросеть не справилась, активируем резервный режим
+            # Если нейросеть не справилась — резервный режим
             self.update_log("Нейросеть не справилась. Активируется резервный режим.")
             if self.activate_reserve_mode():
                 self.update_log("Выбор станции завершен с использованием резервного режима.")
                 return True
 
-            # Если не удалось выбрать станцию
-            self.update_log("Не удалось выбрать станцию. Полет продолжается.")
+            # Совсем некуда садиться — летим с риском
+            self.update_log("Не удалось выбрать станцию. Полет продолжается с риском разряда.")
             return False
 
         except Exception as e:
@@ -1320,46 +1335,51 @@ class Simulation:
             return False
 
     def move_drone(self, *args) -> List[plt.Artist]:
-        """Движение дрона с учётом множителя скорости."""
+        """Движение дрона с учётом множителя скорости и проверкой достижимости цели текущей фазы."""
         if not self.mission_active or self.target_pos is None:
             return [self.drone_icon, self.route_line]
 
-        # Преобразуем позицию дрона в float для совместимости с вычислениями
+        # Проверка достижимости до текущей цели (с учетом направления)
+        if self.returning_home:
+            energy_to_goal = self.calculate_energy_consumption(self.drone_pos, self.start_pos, self.drone_height,
+                                                               self.drone_height)
+            goal_pos = self.start_pos
+            goal_name = "стартовой точки"
+        else:
+            energy_to_goal = self.calculate_energy_consumption(self.drone_pos, self.end_pos, self.drone_height, 0)
+            goal_pos = self.end_pos
+            goal_name = "конечной точки"
+        # Если не хватает заряда — аварийная посадка
+        if energy_to_goal > self.remaining_capacity_watt_hours * 0.8:
+            self.update_log(
+                f"Недостаточно заряда для полета до {goal_name}, требуется {energy_to_goal:.2f} Вт·ч, доступно: {self.remaining_capacity_watt_hours:.2f} Вт·ч. Поиск станции для зарядки.")
+            self.check_emergency_landing()
+            return [self.drone_icon, self.route_line]
+
         self.drone_pos = self.drone_pos.astype(float)
 
-        # Реальное время обновления
         current_time = time.time()
-        real_delta_time = current_time - self.last_update_time  # Прошедшее время в реальном мире
-        self.last_update_time = current_time  # Обновляем время последнего кадра
+        real_delta_time = current_time - self.last_update_time
+        self.last_update_time = current_time
 
-        # Симуляционное время с учётом множителя
         sim_delta_time = real_delta_time * self.simulation_speed_multiplier
 
-        # Дрон движется с фиксированной скоростью 15 м/с (симуляционное время)
-        distance_step = self.real_speed * sim_delta_time  # Пройденное расстояние за sim_delta_time
+        distance_step = self.real_speed * sim_delta_time
         direction = self.target_pos - self.drone_pos
-        distance_to_target = np.linalg.norm(direction) * self.cell_size  # В метрах
+        distance_to_target = np.linalg.norm(direction) * self.cell_size
 
-        if distance_step >= distance_to_target:  # Дрон достиг цели
-            self.drone_pos = self.target_pos.copy()  # Устанавливаем позицию точно на цель
+        if distance_step >= distance_to_target:
+            self.drone_pos = self.target_pos.copy()
             self.update_log(f"Дрон достиг цели: {self.target_pos}.")
             self.handle_arrival()
         else:
-            # Двигаем дрон в сторону цели
-            direction_normalized = direction / np.linalg.norm(direction)  # Нормализация вектора
-            step_vector = direction_normalized * (distance_step / self.cell_size)  # Шаг в клетках
+            direction_normalized = direction / np.linalg.norm(direction)
+            step_vector = direction_normalized * (distance_step / self.cell_size)
             self.drone_pos += step_vector
-
-            # Расход энергии (на основе симуляционного времени)
             self.consume_energy(distance=distance_step)
 
-        # Размер дрона не изменяется при горизонтальном движении
         self.drone_icon.set_offsets(self.drone_pos)
-
-        # Централизованное обновление визуальных параметров
         self.update_drone_visuals()
-
-        # Обновляем карту
         return [self.drone_icon, self.route_line]
 
     def start_animation(self):
@@ -1800,11 +1820,9 @@ class Simulation:
         self.is_landing = False
 
         if self.returning_home:
-            # Летим к стартовой точке (возвращаемся домой)
             self.target_pos = self.start_pos.copy()
             self.update_log(f"Цель после зарядки: стартовая точка {self.target_pos}.")
         else:
-            # Летим к конечной точке
             self.target_pos = self.end_pos.copy()
             self.update_log(f"Цель после зарядки: конечная точка {self.target_pos}.")
 
