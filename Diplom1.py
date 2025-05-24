@@ -1341,36 +1341,41 @@ class Simulation:
             self.update_log(f"Ошибка в check_emergency_landing: {str(e)}")
             return False
 
-    def move_drone(self, *args) -> List[plt.Artist]:
-        """Движение дрона с учётом множителя скорости и проверкой достижимости цели текущей фазы."""
+    def move_drone(self, *args) -> list:
+        """Движение дрона с учетом множителя скорости и проверкой достижимости до self.target_pos (универсально для любой цели: конечная точка, станция, старт...)."""
         if not self.mission_active or self.target_pos is None:
             return [self.drone_icon, self.route_line]
 
-        # Проверка достижимости до текущей цели (с учетом направления)
-        if self.returning_home:
-            energy_to_target = self.calculate_energy_consumption(self.drone_pos, self.start_pos, self.drone_height,
-                                                               self.drone_height)
-            goal_pos = self.start_pos
-            goal_name = "стартовой точки"
-        else:
-            energy_to_target = self.calculate_energy_consumption(self.drone_pos, self.end_pos, self.drone_height, 0)
-            goal_pos = self.end_pos
-            goal_name = "конечной точки"
-        # Если не хватает заряда — аварийная посадка
-        if energy_to_target > self.remaining_capacity_watt_hours * 0.8:
-            self.update_log(
-                f"Недостаточно заряда для полета до {goal_name}, требуется {energy_to_target:.2f} Вт·ч, доступно: {self.remaining_capacity_watt_hours:.2f} Вт·ч. Поиск станции для зарядки.")
+        # Определяем высоту для цели (если это станция — её высота, если обычная точка — 0)
+        end_height = 0
+        for i, station in enumerate(self.stations):
+            if np.allclose(self.target_pos, self.stations[i], atol=1e-2):
+                end_height = self.station_heights[i]
+                break
+
+        energy_to_target = self.calculate_energy_consumption(
+            self.drone_pos, self.target_pos, self.drone_height, end_height
+        )
+        available_energy = self.remaining_capacity_watt_hours
+
+        self.update_log(
+            f"Проверка энергии: требуется до текущей цели {energy_to_target:.2f} Вт·ч, доступно: {available_energy:.2f} Вт·ч."
+        )
+
+        # Если не хватает заряда даже до текущей цели (станция, старт, финиш) — ищи ближайшую достижимую станцию!
+        if energy_to_target > available_energy:
+            self.update_log("Недостаточно заряда для полета до текущей цели, поиск станции для зарядки.")
+            # Сброс is_forced_landing обязателен!
+            self.is_forced_landing = False
             self.check_emergency_landing()
             return [self.drone_icon, self.route_line]
 
         self.drone_pos = self.drone_pos.astype(float)
-
         current_time = time.time()
         real_delta_time = current_time - self.last_update_time
         self.last_update_time = current_time
 
         sim_delta_time = real_delta_time * self.simulation_speed_multiplier
-
         distance_step = self.real_speed * sim_delta_time
         direction = self.target_pos - self.drone_pos
         distance_to_target = np.linalg.norm(direction) * self.cell_size
@@ -1388,6 +1393,74 @@ class Simulation:
         self.drone_icon.set_offsets(self.drone_pos)
         self.update_drone_visuals()
         return [self.drone_icon, self.route_line]
+
+    def check_emergency_landing(self) -> bool:
+        """
+        Проверка необходимости аварийной посадки для подзарядки.
+        Теперь всегда делает расчет до self.target_pos, и если не хватает — ищет ближайшую реально достижимую станцию.
+        """
+        try:
+            # Проверяем достижимость до текущей цели (а не только до конечной/стартовой точки)
+            if self.target_pos is None:
+                self.update_log("Ошибка: неизвестна текущая цель для проверки аварийной посадки!")
+                return False
+
+            # Определяем высоту цели
+            end_height = 0
+            for i, station in enumerate(self.stations):
+                if np.allclose(self.target_pos, self.stations[i], atol=1e-2):
+                    end_height = self.station_heights[i]
+                    break
+
+            energy_to_target = self.calculate_energy_consumption(
+                self.drone_pos, self.target_pos, self.drone_height, end_height
+            )
+            available_energy = self.remaining_capacity_watt_hours
+
+            self.update_log(
+                f"Проверка аварийной посадки: требуется до текущей цели {energy_to_target:.2f} Вт·ч, доступно: {available_energy:.2f} Вт·ч."
+            )
+
+            if energy_to_target <= available_energy:
+                self.update_log("Энергии достаточно для текущей цели. Аварийная посадка не требуется.")
+                self.is_forced_landing = False
+                return False
+
+            # Если не хватает — ищем ближайшую реально достижимую станцию
+            min_energy = float('inf')
+            best_station = None
+            for i, (x, y) in enumerate(self.stations):
+                energy = self.calculate_energy_consumption(
+                    self.drone_pos, [x, y], self.drone_height, self.station_heights[i]
+                )
+                if energy <= available_energy and energy < min_energy and not self.station_statuses[i]:
+                    min_energy = energy
+                    best_station = i
+
+            if best_station is not None:
+                self.update_log(
+                    f"Автоматическая посадка на станцию {best_station + 1} (требуется {min_energy:.2f} Вт·ч)")
+                self.target_pos = np.array(self.stations[best_station])
+                self.route_line.set_data(
+                    [self.drone_pos[0], self.target_pos[0]],
+                    [self.drone_pos[1], self.target_pos[1]]
+                )
+                self.is_forced_landing = True
+                self.mission_active = True
+                if hasattr(self, 'animation') and self.animation and self.animation.event_source:
+                    self.animation.event_source.stop()
+                self.start_animation()
+                return True
+
+            self.update_log("Нет достижимых станций для аварийной посадки! Миссия завершена с аварией.")
+            self.mission_active = False
+            if hasattr(self, 'animation') and self.animation and self.animation.event_source:
+                self.animation.event_source.stop()
+            return False
+
+        except Exception as e:
+            self.update_log(f"Ошибка в check_emergency_landing: {str(e)}")
+            return False
 
     def start_animation(self):
         """Запуск анимации с учётом множителя скорости."""
@@ -1551,17 +1624,19 @@ class Simulation:
         return True
 
     def check_and_handle_feasibility(self):
-        """Проверка возможности долететь до следующей точки маршрута."""
+        """Проверка возможности долететь до следующей точки маршрута (без safety margin)."""
         target_point = self.route_points[self.current_route_index]
-        required_energy = self.calculate_energy_consumption(self.drone_pos, target_point, self.drone_height,
-                                                            0) / 3600  # Вт·ч
+        required_energy = self.calculate_energy_consumption(self.drone_pos, target_point, self.drone_height, 0)
         available_energy = self.remaining_capacity_watt_hours
         self.update_log(
-            f"Проверка возможности полёта: требуется {required_energy:.2f} Вт·ч, доступно: {available_energy:.2f} Вт·ч.")
+            f"Проверка возможности полёта: требуется {required_energy:.2f} Вт·ч, доступно: {available_energy:.2f} Вт·ч."
+        )
 
         if required_energy > available_energy:
             self.update_log("Недостаточно заряда для полёта до следующей точки — поиск станции для зарядки.")
             self.force_decision()
+        else:
+            self.update_log("Энергии достаточно для перехода к следующей точке маршрута.")
 
     def force_decision(self) -> bool:
         """Принудительный выбор док-станции с использованием нейросети."""
@@ -1768,9 +1843,18 @@ class Simulation:
         self.remaining_capacity_watt_hours = self.BATTERY_CAPACITY_WATT_HOURS
         self.update_log("Зарядка завершена. Батарея дрона полностью заряжена.")
         self.is_charging = False
+        self.is_forced_landing = False  # Сброс аварийного режима, если был
 
         # Обновление графика при завершении зарядки
         self.plot_charge_graph()
+
+        # >>> Новый блок: Проверка необходимости повторной зарядки <<<
+        # Проверяем: хватает ли заряда для продолжения маршрута?
+        if not self.can_continue_after_charge():
+            self.update_log(
+                "Сразу после зарядки: заряда всё ещё недостаточно для продолжения маршрута. Запуск повторной зарядки.")
+            self.root.after(100, lambda: self.charge_at_station(self.get_current_station_index()))
+            return
 
         # Расход энергии на подъем на рабочую высоту
         self.target_height = float(self.entries['drone_height'].get())  # Используем значение из параметров
@@ -1782,9 +1866,7 @@ class Simulation:
             """Обновление высоты при подъеме/спуске."""
             if not self.is_landing:
                 self.update_log("Подъем завершен. Состояние посадки отключено (is_landing=False).")
-                # --- КЛЮЧЕВОЙ МОМЕНТ ---
-                # Передвигаем дрона к следующей точке маршрута после зарядки!
-                self.resume_mission_after_charge()  # Продолжение маршрута после зарядки
+                self.resume_mission_after_charge()
                 return
 
             current_time = time.time()
@@ -1801,8 +1883,7 @@ class Simulation:
                 self.is_landing = False
                 self.update_log(f"Дрон достиг рабочей высоты: {self.target_height:.2f} м. "
                                 f"Флаг is_landing={self.is_landing}. Начинаем продолжение миссии.")
-                # --- КЛЮЧЕВОЙ МОМЕНТ ---
-                self.resume_mission_after_charge()  # Продолжаем маршрут после зарядки
+                self.resume_mission_after_charge()
                 return
 
             self.drone_height += height_change if height_difference > 0 else -height_change
