@@ -1081,7 +1081,7 @@ class Simulation:
 
     def calculate_energy_consumption(self, start_pos: np.ndarray, end_pos: np.ndarray,
                                      start_height: float, end_height: float = 0) -> float:
-        """Расчет потребления энергии для маршрута."""
+        """Расчет потребления энергии для маршрута, результат в Вт·ч."""
         dx = (end_pos[0] - start_pos[0]) * self.cell_size
         dy = (end_pos[1] - start_pos[1]) * self.cell_size
         distance = np.sqrt(dx * dx + dy * dy)
@@ -1091,7 +1091,8 @@ class Simulation:
         vertical = abs(height_diff) * (self.DESCENT_ENERGY if height_diff > 0 else self.CLIMB_ENERGY)
         systems = distance * self.SYSTEMS_ENERGY
 
-        return horizontal + vertical + systems
+        total_joules = horizontal + vertical + systems
+        return total_joules / 3600  # Теперь результат в Вт·ч!
 
     def consume_energy(self, distance: float = 0, height_change: float = 0, time_elapsed: float = 1):
         """Реалистичный расход энергии с учетом фиксированной скорости."""
@@ -1347,18 +1348,18 @@ class Simulation:
 
         # Проверка достижимости до текущей цели (с учетом направления)
         if self.returning_home:
-            energy_to_goal = self.calculate_energy_consumption(self.drone_pos, self.start_pos, self.drone_height,
+            energy_to_target = self.calculate_energy_consumption(self.drone_pos, self.start_pos, self.drone_height,
                                                                self.drone_height)
             goal_pos = self.start_pos
             goal_name = "стартовой точки"
         else:
-            energy_to_goal = self.calculate_energy_consumption(self.drone_pos, self.end_pos, self.drone_height, 0)
+            energy_to_target = self.calculate_energy_consumption(self.drone_pos, self.end_pos, self.drone_height, 0)
             goal_pos = self.end_pos
             goal_name = "конечной точки"
         # Если не хватает заряда — аварийная посадка
-        if energy_to_goal > self.remaining_capacity_watt_hours * 0.8:
+        if energy_to_target > self.remaining_capacity_watt_hours * 0.8:
             self.update_log(
-                f"Недостаточно заряда для полета до {goal_name}, требуется {energy_to_goal:.2f} Вт·ч, доступно: {self.remaining_capacity_watt_hours:.2f} Вт·ч. Поиск станции для зарядки.")
+                f"Недостаточно заряда для полета до {goal_name}, требуется {energy_to_target:.2f} Вт·ч, доступно: {self.remaining_capacity_watt_hours:.2f} Вт·ч. Поиск станции для зарядки.")
             self.check_emergency_landing()
             return [self.drone_icon, self.route_line]
 
