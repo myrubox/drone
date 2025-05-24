@@ -1,0 +1,434 @@
+Точность нейросети на тестовых данных: 96.53%
+
+[DEBUG] Установка оставшегося заряда на 25.00 Вт·ч (метод: remaining_capacity_watt_hours, строка: 268)
+Стек вызова:
+  File "C:\Users\my_ru\Downloads\code\Diplommm.py", line 2151, in <module>
+    root.mainloop()
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1505, in mainloop
+    self.tk.mainloop(n)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1968, in __call__
+    return self.func(*args)
+  File "C:\Users\my_ru\Downloads\code\Diplommm.py", line 977, in apply_parameters
+    self.remaining_capacity_watt_hours = self.BATTERY_CAPACITY_WATT_HOURS  # Начальный заряд
+  File "C:\Users\my_ru\Downloads\code\Diplommm.py", line 268, in remaining_capacity_watt_hours
+    self._log_capacity_change(value)
+  File "C:\Users\my_ru\Downloads\code\Diplommm.py", line 248, in _log_capacity_change
+    stack = ''.join(traceback.format_stack(limit=6))
+
+
+Множитель скорости установлен на 1.00. Анимация обновляется каждые 1000 мс.
+Клик по карте: (x, y) = (0.02, 6.94)
+Начальная точка установлена: (0.02, 6.94)
+Клик по карте: (x, y) = (29.94, 6.98)
+Конечная точка установлена: (29.94, 6.98)
+Маршрут успешно обновлен!
+Множитель скорости установлен на 1.10. Анимация обновляется каждые 909 мс.
+Множитель скорости установлен на 1.30. Анимация обновляется каждые 769 мс.
+Множитель скорости установлен на 1.50. Анимация обновляется каждые 666 мс.
+Множитель скорости установлен на 1.70. Анимация обновляется каждые 588 мс.
+Множитель скорости установлен на 2.10. Анимация обновляется каждые 476 мс.
+Множитель скорости установлен на 2.70. Анимация обновляется каждые 370 мс.
+Множитель скорости установлен на 3.60. Анимация обновляется каждые 277 мс.
+Множитель скорости установлен на 5.00. Анимация обновляется каждые 200 мс.
+Множитель скорости установлен на 6.50. Анимация обновляется каждые 153 мс.
+Множитель скорости установлен на 8.20. Анимация обновляется каждые 121 мс.
+Множитель скорости установлен на 10.00. Анимация обновляется каждые 100 мс.
+Начало миссии туда-обратно. Текущая позиция: [0.01596934 6.93777603], цель: [29.94251038  6.98150335].
+[LOG-calc_energy] start=[0.01596934 6.93777603], end=[29.94251038  6.98150335], dx=2992.65, dy=4.37, dist=2992.66, h0=500.00, h1=0.00, dh=-500.00, horiz=29926.57, vert=20000.00, systems=997.55, total=50924.13, Вт·ч=14.1456
+[LOG-check_and_handle_feasibility] Проверка возможности полёта: требуется 14.1456 Вт·ч, доступно: 25.0000 Вт·ч.
+[LOG-check_and_handle_feasibility] Энергии достаточно для перехода к следующей точке маршрута.
+Попытка запуска анимации.
+Анимация успешно запущена.
+[LOG-move_drone] pos=[0.01596934 6.93777603], height=500.0, target=[29.94251038  6.98150335], start_leg=???, start_energy=???, leg_in_progress=False
+[LOG-move_drone] Новый этап: start_leg=[0.01596934 6.93777603], target=[29.94251038  6.98150335], height=500.0, start_energy=25.0
+[LOG-move_drone] distance_to_target=2992.6573, distance_step=7.1028, real_delta_time=0.0474, sim_delta_time=0.4735
+[LOG-move_drone] pos=[0.08699738 6.93787981], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2985.5545, distance_step=19.0531, real_delta_time=0.1270, sim_delta_time=1.2702
+[LOG-move_drone] pos=[0.27752771 6.93815821], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2966.5014, distance_step=16.7757, real_delta_time=0.1118, sim_delta_time=1.1184
+[LOG-move_drone] pos=[0.44528433 6.93840332], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2949.7258, distance_step=16.6981, real_delta_time=0.1113, sim_delta_time=1.1132
+[LOG-move_drone] pos=[0.61226489 6.93864731], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2933.0277, distance_step=16.7795, real_delta_time=0.1119, sim_delta_time=1.1186
+[LOG-move_drone] pos=[0.78005978 6.93889248], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2916.2482, distance_step=16.6705, real_delta_time=0.1111, sim_delta_time=1.1114
+[LOG-move_drone] pos=[0.94676425 6.93913606], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2899.5777, distance_step=16.6560, real_delta_time=0.1110, sim_delta_time=1.1104
+[LOG-move_drone] pos=[1.11332425 6.93937943], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2882.9217, distance_step=14.3625, real_delta_time=0.0958, sim_delta_time=0.9575
+[LOG-move_drone] pos=[1.25694924 6.93958929], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2868.5592, distance_step=16.7058, real_delta_time=0.1114, sim_delta_time=1.1137
+[LOG-move_drone] pos=[1.42400669 6.93983339], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2851.8534, distance_step=14.3274, real_delta_time=0.0955, sim_delta_time=0.9552
+[LOG-move_drone] pos=[1.56728013 6.94004273], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2837.5261, distance_step=14.2936, real_delta_time=0.0953, sim_delta_time=0.9529
+[LOG-move_drone] pos=[1.71021597 6.94025159], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2823.2325, distance_step=16.7863, real_delta_time=0.1119, sim_delta_time=1.1191
+[LOG-move_drone] pos=[1.87807916 6.94049686], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2806.4461, distance_step=16.7678, real_delta_time=0.1118, sim_delta_time=1.1179
+[LOG-move_drone] pos=[2.04575674 6.94074186], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2789.6783, distance_step=14.3113, real_delta_time=0.0954, sim_delta_time=0.9541
+[LOG-move_drone] pos=[2.1888696  6.94095097], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2775.3670, distance_step=16.7847, real_delta_time=0.1119, sim_delta_time=1.1190
+[LOG-move_drone] pos=[2.35671598 6.94119622], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2758.5824, distance_step=14.2985, real_delta_time=0.0953, sim_delta_time=0.9532
+[LOG-move_drone] pos=[2.49970082 6.94140515], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2744.2839, distance_step=16.6466, real_delta_time=0.1110, sim_delta_time=1.1098
+[LOG-move_drone] pos=[2.66616712 6.94164838], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2727.6372, distance_step=16.7353, real_delta_time=0.1116, sim_delta_time=1.1157
+[LOG-move_drone] pos=[2.83351997 6.94189291], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2710.9019, distance_step=16.7793, real_delta_time=0.1119, sim_delta_time=1.1186
+[LOG-move_drone] pos=[3.00131307 6.94213808], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2694.1226, distance_step=16.7346, real_delta_time=0.1116, sim_delta_time=1.1156
+[LOG-move_drone] pos=[3.16865841 6.9423826 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2677.3881, distance_step=16.6860, real_delta_time=0.1112, sim_delta_time=1.1124
+[LOG-move_drone] pos=[3.3355181 6.9426264], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2660.7021, distance_step=14.4182, real_delta_time=0.0961, sim_delta_time=0.9612
+[LOG-move_drone] pos=[3.47969991 6.94283708], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2646.2839, distance_step=14.3361, real_delta_time=0.0956, sim_delta_time=0.9557
+[LOG-move_drone] pos=[3.62306061 6.94304655], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2631.9478, distance_step=16.7567, real_delta_time=0.1117, sim_delta_time=1.1171
+[LOG-move_drone] pos=[3.79062768 6.94329139], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2615.1911, distance_step=14.3392, real_delta_time=0.0956, sim_delta_time=0.9559
+[LOG-move_drone] pos=[3.9340195  6.94350091], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2600.8519, distance_step=19.1759, real_delta_time=0.1278, sim_delta_time=1.2784
+[LOG-move_drone] pos=[4.12577864 6.9437811 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2581.6759, distance_step=16.7956, real_delta_time=0.1120, sim_delta_time=1.1197
+[LOG-move_drone] pos=[4.2937341  6.94402651], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2564.8804, distance_step=16.8007, real_delta_time=0.1120, sim_delta_time=1.1200
+[LOG-move_drone] pos=[4.46174106 6.94427199], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2548.0797, distance_step=16.7392, real_delta_time=0.1116, sim_delta_time=1.1159
+[LOG-move_drone] pos=[4.62913289 6.94451658], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2531.3405, distance_step=16.7400, real_delta_time=0.1116, sim_delta_time=1.1160
+[LOG-move_drone] pos=[4.79653224 6.94476117], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2514.6005, distance_step=16.7772, real_delta_time=0.1118, sim_delta_time=1.1185
+[LOG-move_drone] pos=[4.96430423 6.94500631], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2497.8233, distance_step=16.7730, real_delta_time=0.1118, sim_delta_time=1.1182
+[LOG-move_drone] pos=[5.13203367 6.94525139], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2481.0503, distance_step=16.7427, real_delta_time=0.1116, sim_delta_time=1.1162
+[LOG-move_drone] pos=[5.29946091 6.94549603], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2464.3076, distance_step=16.7441, real_delta_time=0.1116, sim_delta_time=1.1163
+[LOG-move_drone] pos=[5.4669021  6.94574069], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2447.5634, distance_step=16.7305, real_delta_time=0.1115, sim_delta_time=1.1154
+[LOG-move_drone] pos=[5.63420739 6.94598515], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2430.8329, distance_step=16.6602, real_delta_time=0.1111, sim_delta_time=1.1107
+[LOG-move_drone] pos=[5.80080887 6.94622858], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2414.1727, distance_step=16.7510, real_delta_time=0.1117, sim_delta_time=1.1167
+[LOG-move_drone] pos=[5.96831908 6.94647333], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2397.4217, distance_step=16.7249, real_delta_time=0.1115, sim_delta_time=1.1150
+[LOG-move_drone] pos=[6.13556787 6.94671771], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2380.6968, distance_step=16.7108, real_delta_time=0.1114, sim_delta_time=1.1141
+[LOG-move_drone] pos=[6.30267611 6.94696188], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2363.9860, distance_step=16.6876, real_delta_time=0.1113, sim_delta_time=1.1125
+[LOG-move_drone] pos=[6.46955189 6.94720571], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2347.2984, distance_step=16.7223, real_delta_time=0.1115, sim_delta_time=1.1148
+[LOG-move_drone] pos=[6.63677493 6.94745005], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2330.5760, distance_step=16.7657, real_delta_time=0.1118, sim_delta_time=1.1177
+[LOG-move_drone] pos=[6.80443212 6.94769503], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2313.8103, distance_step=16.7447, real_delta_time=0.1116, sim_delta_time=1.1163
+[LOG-move_drone] pos=[6.97187903 6.94793969], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2297.0656, distance_step=16.6974, real_delta_time=0.1113, sim_delta_time=1.1132
+[LOG-move_drone] pos=[7.1388528  6.94818367], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2280.3682, distance_step=16.7786, real_delta_time=0.1119, sim_delta_time=1.1186
+[LOG-move_drone] pos=[7.30663839 6.94842883], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2263.5896, distance_step=16.7922, real_delta_time=0.1119, sim_delta_time=1.1195
+[LOG-move_drone] pos=[7.47455987 6.94867419], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2246.7974, distance_step=16.8308, real_delta_time=0.1122, sim_delta_time=1.1221
+[LOG-move_drone] pos=[7.64286723 6.94892011], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2229.9667, distance_step=16.6996, real_delta_time=0.1113, sim_delta_time=1.1133
+[LOG-move_drone] pos=[7.80986318 6.94916412], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2213.2671, distance_step=16.7054, real_delta_time=0.1114, sim_delta_time=1.1137
+[LOG-move_drone] pos=[7.9769167  6.94940821], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2196.5617, distance_step=16.7816, real_delta_time=0.1119, sim_delta_time=1.1188
+[LOG-move_drone] pos=[8.14473232 6.94965341], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2179.7801, distance_step=16.7359, real_delta_time=0.1116, sim_delta_time=1.1157
+[LOG-move_drone] pos=[8.31209126 6.94989795], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2163.0442, distance_step=16.6489, real_delta_time=0.1110, sim_delta_time=1.1099
+[LOG-move_drone] pos=[8.47858009 6.95014122], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2146.3953, distance_step=16.7345, real_delta_time=0.1116, sim_delta_time=1.1156
+[LOG-move_drone] pos=[8.64592507 6.95038573], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2129.6608, distance_step=16.6964, real_delta_time=0.1113, sim_delta_time=1.1131
+[LOG-move_drone] pos=[8.81288847 6.95062969], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2112.9644, distance_step=16.6405, real_delta_time=0.1109, sim_delta_time=1.1094
+[LOG-move_drone] pos=[8.97929326 6.95087283], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2096.3239, distance_step=16.7550, real_delta_time=0.1117, sim_delta_time=1.1170
+[LOG-move_drone] pos=[9.14684352 6.95111765], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2079.5689, distance_step=16.7130, real_delta_time=0.1114, sim_delta_time=1.1142
+[LOG-move_drone] pos=[9.31397286 6.95136185], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2062.8560, distance_step=16.7666, real_delta_time=0.1118, sim_delta_time=1.1178
+[LOG-move_drone] pos=[9.48163828 6.95160684], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2046.0894, distance_step=16.6738, real_delta_time=0.1112, sim_delta_time=1.1116
+[LOG-move_drone] pos=[9.64837602 6.95185047], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2029.4156, distance_step=16.7945, real_delta_time=0.1120, sim_delta_time=1.1196
+[LOG-move_drone] pos=[9.81632111 6.95209586], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=2012.6211, distance_step=16.6698, real_delta_time=0.1111, sim_delta_time=1.1113
+[LOG-move_drone] pos=[9.98301915 6.95233943], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1995.9513, distance_step=16.7280, real_delta_time=0.1115, sim_delta_time=1.1152
+[LOG-move_drone] pos=[10.15029905  6.95258386], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1979.2232, distance_step=16.8918, real_delta_time=0.1126, sim_delta_time=1.1261
+[LOG-move_drone] pos=[10.31921688  6.95283067], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1962.3314, distance_step=16.8173, real_delta_time=0.1121, sim_delta_time=1.1212
+[LOG-move_drone] pos=[10.48738942  6.9530764 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1945.5142, distance_step=16.7697, real_delta_time=0.1118, sim_delta_time=1.1180
+[LOG-move_drone] pos=[10.65508631  6.95332143], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1928.7445, distance_step=16.7323, real_delta_time=0.1115, sim_delta_time=1.1155
+[LOG-move_drone] pos=[10.82240912  6.95356591], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1912.0122, distance_step=16.7267, real_delta_time=0.1115, sim_delta_time=1.1151
+[LOG-move_drone] pos=[10.98967579  6.95381032], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1895.2855, distance_step=16.6689, real_delta_time=0.1111, sim_delta_time=1.1113
+[LOG-move_drone] pos=[11.15636417  6.95405387], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1878.6166, distance_step=16.6620, real_delta_time=0.1111, sim_delta_time=1.1108
+[LOG-move_drone] pos=[11.32298354  6.95429733], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1861.9547, distance_step=16.6731, real_delta_time=0.1112, sim_delta_time=1.1115
+[LOG-move_drone] pos=[11.48971412  6.95454095], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1845.2816, distance_step=16.8005, real_delta_time=0.1120, sim_delta_time=1.1200
+[LOG-move_drone] pos=[11.65771893  6.95478643], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1828.4811, distance_step=16.7144, real_delta_time=0.1114, sim_delta_time=1.1143
+[LOG-move_drone] pos=[11.82486293  6.95503065], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1811.7667, distance_step=16.8532, real_delta_time=0.1124, sim_delta_time=1.1235
+[LOG-move_drone] pos=[11.99339488  6.9552769 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1794.9135, distance_step=16.7523, real_delta_time=0.1117, sim_delta_time=1.1168
+[LOG-move_drone] pos=[12.16091797  6.95552168], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1778.1611, distance_step=16.7340, real_delta_time=0.1116, sim_delta_time=1.1156
+[LOG-move_drone] pos=[12.32825795  6.95576619], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1761.4271, distance_step=16.7088, real_delta_time=0.1114, sim_delta_time=1.1139
+[LOG-move_drone] pos=[12.49534616  6.95601033], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1744.7183, distance_step=16.7572, real_delta_time=0.1117, sim_delta_time=1.1171
+[LOG-move_drone] pos=[12.66291824  6.95625518], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1727.9611, distance_step=16.7946, real_delta_time=0.1120, sim_delta_time=1.1196
+[LOG-move_drone] pos=[12.8308644   6.95650058], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1711.1664, distance_step=16.7229, real_delta_time=0.1115, sim_delta_time=1.1149
+[LOG-move_drone] pos=[12.99809316  6.95674492], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1694.4435, distance_step=16.7464, real_delta_time=0.1116, sim_delta_time=1.1164
+[LOG-move_drone] pos=[13.16555688  6.95698961], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1677.6971, distance_step=16.6666, real_delta_time=0.1111, sim_delta_time=1.1111
+[LOG-move_drone] pos=[13.33222238  6.95723314], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1661.0306, distance_step=16.6695, real_delta_time=0.1111, sim_delta_time=1.1113
+[LOG-move_drone] pos=[13.49891684  6.95747671], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1644.3611, distance_step=16.7903, real_delta_time=0.1119, sim_delta_time=1.1194
+[LOG-move_drone] pos=[13.66681973  6.95772204], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1627.5708, distance_step=16.7400, real_delta_time=0.1116, sim_delta_time=1.1160
+[LOG-move_drone] pos=[13.83421979  6.95796664], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1610.8308, distance_step=14.3805, real_delta_time=0.0959, sim_delta_time=0.9587
+[LOG-move_drone] pos=[13.9780243   6.95817676], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1596.4503, distance_step=16.7170, real_delta_time=0.1114, sim_delta_time=1.1145
+[LOG-move_drone] pos=[14.14519441  6.95842102], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1579.7333, distance_step=14.3022, real_delta_time=0.0953, sim_delta_time=0.9535
+[LOG-move_drone] pos=[14.28821644  6.95862999], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1565.4311, distance_step=16.6747, real_delta_time=0.1112, sim_delta_time=1.1116
+[LOG-move_drone] pos=[14.45496312  6.95887364], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1548.7564, distance_step=16.6813, real_delta_time=0.1112, sim_delta_time=1.1121
+[LOG-move_drone] pos=[14.62177595  6.95911738], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1532.0751, distance_step=16.7283, real_delta_time=0.1115, sim_delta_time=1.1152
+[LOG-move_drone] pos=[14.78905836  6.9593618 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1515.3468, distance_step=16.6673, real_delta_time=0.1111, sim_delta_time=1.1112
+[LOG-move_drone] pos=[14.95573136  6.95960534], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1498.6795, distance_step=16.7626, real_delta_time=0.1118, sim_delta_time=1.1175
+[LOG-move_drone] pos=[15.12335744  6.95985027], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1481.9169, distance_step=16.7087, real_delta_time=0.1114, sim_delta_time=1.1139
+[LOG-move_drone] pos=[15.29044387  6.9600944 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1465.2082, distance_step=16.7362, real_delta_time=0.1116, sim_delta_time=1.1157
+[LOG-move_drone] pos=[15.45780602  6.96033895], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1448.4720, distance_step=16.7368, real_delta_time=0.1116, sim_delta_time=1.1158
+[LOG-move_drone] pos=[15.62517354  6.9605835 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1431.7352, distance_step=16.7459, real_delta_time=0.1116, sim_delta_time=1.1164
+[LOG-move_drone] pos=[15.79263261  6.96082818], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1414.9893, distance_step=16.7617, real_delta_time=0.1117, sim_delta_time=1.1174
+[LOG-move_drone] pos=[15.96024904  6.96107309], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1398.2276, distance_step=16.6872, real_delta_time=0.1112, sim_delta_time=1.1125
+[LOG-move_drone] pos=[16.12712052  6.96131692], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1381.5405, distance_step=16.7021, real_delta_time=0.1113, sim_delta_time=1.1135
+[LOG-move_drone] pos=[16.29414114  6.96156096], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1364.8384, distance_step=16.7138, real_delta_time=0.1114, sim_delta_time=1.1143
+[LOG-move_drone] pos=[16.46127942  6.96180518], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1348.1245, distance_step=16.7315, real_delta_time=0.1115, sim_delta_time=1.1154
+[LOG-move_drone] pos=[16.62859401  6.96204965], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1331.3931, distance_step=16.7018, real_delta_time=0.1113, sim_delta_time=1.1135
+[LOG-move_drone] pos=[16.79561141  6.96229369], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1314.6913, distance_step=16.8010, real_delta_time=0.1120, sim_delta_time=1.1201
+[LOG-move_drone] pos=[16.96362123  6.96253918], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1297.8903, distance_step=16.8132, real_delta_time=0.1121, sim_delta_time=1.1209
+[LOG-move_drone] pos=[17.131753    6.96278484], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1281.0771, distance_step=16.7731, real_delta_time=0.1118, sim_delta_time=1.1182
+[LOG-move_drone] pos=[17.29948422  6.96302992], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1264.3040, distance_step=16.6650, real_delta_time=0.1111, sim_delta_time=1.1110
+[LOG-move_drone] pos=[17.46613434  6.96327343], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1247.6389, distance_step=16.6773, real_delta_time=0.1112, sim_delta_time=1.1118
+[LOG-move_drone] pos=[17.63290748  6.96351711], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1230.9616, distance_step=16.7417, real_delta_time=0.1116, sim_delta_time=1.1161
+[LOG-move_drone] pos=[17.80032471  6.96376173], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1214.2199, distance_step=16.7243, real_delta_time=0.1115, sim_delta_time=1.1150
+[LOG-move_drone] pos=[17.96756706  6.9640061 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1197.4956, distance_step=16.7363, real_delta_time=0.1116, sim_delta_time=1.1158
+[LOG-move_drone] pos=[18.13492993  6.96425064], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1180.7593, distance_step=16.7273, real_delta_time=0.1115, sim_delta_time=1.1152
+[LOG-move_drone] pos=[18.30220232  6.96449505], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1164.0320, distance_step=16.8002, real_delta_time=0.1120, sim_delta_time=1.1200
+[LOG-move_drone] pos=[18.47020391  6.96474053], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1147.2319, distance_step=16.7757, real_delta_time=0.1118, sim_delta_time=1.1184
+[LOG-move_drone] pos=[18.63796088  6.96498565], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1130.4562, distance_step=16.6347, real_delta_time=0.1109, sim_delta_time=1.1090
+[LOG-move_drone] pos=[18.80430773  6.9652287 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1113.8215, distance_step=16.8015, real_delta_time=0.1120, sim_delta_time=1.1201
+[LOG-move_drone] pos=[18.9723222  6.9654742], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1097.0200, distance_step=16.7793, real_delta_time=0.1119, sim_delta_time=1.1186
+[LOG-move_drone] pos=[19.14011494  6.96571937], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1080.2407, distance_step=16.7934, real_delta_time=0.1120, sim_delta_time=1.1196
+[LOG-move_drone] pos=[19.30804858  6.96596475], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1063.4473, distance_step=16.8077, real_delta_time=0.1121, sim_delta_time=1.1205
+[LOG-move_drone] pos=[19.47612527  6.96621033], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1046.6396, distance_step=16.6819, real_delta_time=0.1112, sim_delta_time=1.1121
+[LOG-move_drone] pos=[19.64294419  6.96645408], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1029.9577, distance_step=16.7053, real_delta_time=0.1114, sim_delta_time=1.1137
+[LOG-move_drone] pos=[19.80999664  6.96669817], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=1013.2525, distance_step=16.7395, real_delta_time=0.1116, sim_delta_time=1.1160
+[LOG-move_drone] pos=[19.97739169  6.96694276], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=996.5129, distance_step=16.7245, real_delta_time=0.1115, sim_delta_time=1.1150
+[LOG-move_drone] pos=[20.1446369   6.96718713], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=979.7884, distance_step=16.6509, real_delta_time=0.1110, sim_delta_time=1.1101
+[LOG-move_drone] pos=[20.3111454   6.96743043], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=963.1375, distance_step=16.8097, real_delta_time=0.1121, sim_delta_time=1.1206
+[LOG-move_drone] pos=[20.47924176  6.96767604], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=946.3279, distance_step=16.6732, real_delta_time=0.1112, sim_delta_time=1.1115
+[LOG-move_drone] pos=[20.64597342  6.96791966], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=929.6547, distance_step=16.6708, real_delta_time=0.1111, sim_delta_time=1.1114
+[LOG-move_drone] pos=[20.81268111  6.96816325], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=912.9839, distance_step=16.7913, real_delta_time=0.1119, sim_delta_time=1.1194
+[LOG-move_drone] pos=[20.98059401  6.9684086 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=896.1926, distance_step=16.8260, real_delta_time=0.1122, sim_delta_time=1.1217
+[LOG-move_drone] pos=[21.14885417  6.96865445], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=879.3666, distance_step=16.7481, real_delta_time=0.1117, sim_delta_time=1.1165
+[LOG-move_drone] pos=[21.31633541  6.96889917], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=862.6184, distance_step=16.7102, real_delta_time=0.1114, sim_delta_time=1.1140
+[LOG-move_drone] pos=[21.48343721  6.96914333], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=845.9082, distance_step=16.7076, real_delta_time=0.1114, sim_delta_time=1.1138
+[LOG-move_drone] pos=[21.65051291  6.96938745], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=829.2006, distance_step=16.7270, real_delta_time=0.1115, sim_delta_time=1.1151
+[LOG-move_drone] pos=[21.81778244  6.96963186], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=812.4737, distance_step=14.3016, real_delta_time=0.0953, sim_delta_time=0.9534
+[LOG-move_drone] pos=[21.96079874  6.96984083], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=798.1720, distance_step=16.6701, real_delta_time=0.1111, sim_delta_time=1.1113
+[LOG-move_drone] pos=[22.12749964  6.9700844 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=781.5019, distance_step=16.6602, real_delta_time=0.1111, sim_delta_time=1.1107
+[LOG-move_drone] pos=[22.29410112  6.97032783], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=764.8417, distance_step=16.7091, real_delta_time=0.1114, sim_delta_time=1.1139
+[LOG-move_drone] pos=[22.46119184  6.97057198], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=748.1327, distance_step=16.7555, real_delta_time=0.1117, sim_delta_time=1.1170
+[LOG-move_drone] pos=[22.62874711  6.9708168 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=731.3771, distance_step=16.8247, real_delta_time=0.1122, sim_delta_time=1.1216
+[LOG-move_drone] pos=[22.79699439  6.97106264], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=714.5524, distance_step=16.6946, real_delta_time=0.1113, sim_delta_time=1.1130
+[LOG-move_drone] pos=[22.96394062  6.97130657], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=697.8577, distance_step=16.7556, real_delta_time=0.1117, sim_delta_time=1.1170
+[LOG-move_drone] pos=[23.13149661  6.9715514 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=681.1021, distance_step=16.7229, real_delta_time=0.1115, sim_delta_time=1.1149
+[LOG-move_drone] pos=[23.29872573  6.97179575], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=664.3792, distance_step=16.6925, real_delta_time=0.1113, sim_delta_time=1.1128
+[LOG-move_drone] pos=[23.46565015  6.97203965], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=647.6867, distance_step=16.5578, real_delta_time=0.1104, sim_delta_time=1.1039
+[LOG-move_drone] pos=[23.6312281   6.97228158], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=631.1289, distance_step=16.5671, real_delta_time=0.1104, sim_delta_time=1.1045
+[LOG-move_drone] pos=[23.79689903  6.97252365], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=614.5618, distance_step=16.5751, real_delta_time=0.1105, sim_delta_time=1.1050
+[LOG-move_drone] pos=[23.96264971  6.97276584], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=597.9867, distance_step=16.5708, real_delta_time=0.1105, sim_delta_time=1.1047
+[LOG-move_drone] pos=[24.12835712  6.97300797], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=581.4159, distance_step=16.4754, real_delta_time=0.1098, sim_delta_time=1.0984
+[LOG-move_drone] pos=[24.29311074  6.9732487 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=564.9406, distance_step=16.4327, real_delta_time=0.1096, sim_delta_time=1.0955
+[LOG-move_drone] pos=[24.45743736  6.9734888 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=548.5079, distance_step=16.5028, real_delta_time=0.1100, sim_delta_time=1.1002
+[LOG-move_drone] pos=[24.62246563  6.97372993], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=532.0050, distance_step=16.5498, real_delta_time=0.1103, sim_delta_time=1.1033
+[LOG-move_drone] pos=[24.78796383  6.97397175], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=515.4552, distance_step=16.5540, real_delta_time=0.1104, sim_delta_time=1.1036
+[LOG-move_drone] pos=[24.95350387  6.97421363], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=498.9012, distance_step=16.8152, real_delta_time=0.1121, sim_delta_time=1.1210
+[LOG-move_drone] pos=[25.12165567  6.97445933], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=482.0860, distance_step=16.7427, real_delta_time=0.1116, sim_delta_time=1.1162
+[LOG-move_drone] pos=[25.28908219  6.97470397], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=465.3433, distance_step=16.6200, real_delta_time=0.1108, sim_delta_time=1.1080
+[LOG-move_drone] pos=[25.45528242  6.97494681], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=448.7233, distance_step=16.8578, real_delta_time=0.1124, sim_delta_time=1.1239
+[LOG-move_drone] pos=[25.6238605   6.97519313], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=431.8654, distance_step=16.7599, real_delta_time=0.1117, sim_delta_time=1.1173
+[LOG-move_drone] pos=[25.79145905  6.97543802], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=415.1056, distance_step=16.6752, real_delta_time=0.1112, sim_delta_time=1.1117
+[LOG-move_drone] pos=[25.95821109  6.97568167], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=398.4304, distance_step=16.7567, real_delta_time=0.1117, sim_delta_time=1.1171
+[LOG-move_drone] pos=[26.12577745  6.97592651], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=381.6737, distance_step=16.7381, real_delta_time=0.1116, sim_delta_time=1.1159
+[LOG-move_drone] pos=[26.2931582   6.97617108], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=364.9356, distance_step=16.7250, real_delta_time=0.1115, sim_delta_time=1.1150
+[LOG-move_drone] pos=[26.46040842  6.97641545], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=348.2106, distance_step=16.7565, real_delta_time=0.1117, sim_delta_time=1.1171
+[LOG-move_drone] pos=[26.6279737   6.97666029], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=331.4540, distance_step=16.7104, real_delta_time=0.1114, sim_delta_time=1.1140
+[LOG-move_drone] pos=[26.79507801  6.97690446], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=314.7436, distance_step=16.7802, real_delta_time=0.1119, sim_delta_time=1.1187
+[LOG-move_drone] pos=[26.96287968  6.97714964], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=297.9634, distance_step=16.7660, real_delta_time=0.1118, sim_delta_time=1.1177
+[LOG-move_drone] pos=[27.13053974  6.97739462], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=281.1974, distance_step=16.7094, real_delta_time=0.1114, sim_delta_time=1.1140
+[LOG-move_drone] pos=[27.29763403  6.97763877], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=264.4879, distance_step=16.7596, real_delta_time=0.1117, sim_delta_time=1.1173
+[LOG-move_drone] pos=[27.46522972  6.97788365], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=247.7283, distance_step=16.6924, real_delta_time=0.1113, sim_delta_time=1.1128
+[LOG-move_drone] pos=[27.63215306  6.97812755], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=231.0360, distance_step=16.7470, real_delta_time=0.1116, sim_delta_time=1.1165
+[LOG-move_drone] pos=[27.79962286  6.97837225], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=214.2890, distance_step=16.7915, real_delta_time=0.1119, sim_delta_time=1.1194
+[LOG-move_drone] pos=[27.96753755  6.9786176 ], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=197.4975, distance_step=16.6627, real_delta_time=0.1111, sim_delta_time=1.1108
+[LOG-move_drone] pos=[28.13416478  6.97886107], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=180.8348, distance_step=16.6828, real_delta_time=0.1112, sim_delta_time=1.1122
+[LOG-move_drone] pos=[28.30099264  6.97910483], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=164.1519, distance_step=16.7933, real_delta_time=0.1120, sim_delta_time=1.1196
+[LOG-move_drone] pos=[28.46892521  6.97935021], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=147.3587, distance_step=16.6673, real_delta_time=0.1111, sim_delta_time=1.1112
+[LOG-move_drone] pos=[28.63559821  6.97959374], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=130.6914, distance_step=16.7136, real_delta_time=0.1114, sim_delta_time=1.1142
+[LOG-move_drone] pos=[28.80273399  6.97983796], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=113.9778, distance_step=16.8064, real_delta_time=0.1120, sim_delta_time=1.1204
+[LOG-move_drone] pos=[28.97079781  6.98008352], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=97.1714, distance_step=16.7545, real_delta_time=0.1117, sim_delta_time=1.1170
+[LOG-move_drone] pos=[29.13834306  6.98032833], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=80.4168, distance_step=16.7290, real_delta_time=0.1115, sim_delta_time=1.1153
+[LOG-move_drone] pos=[29.30563334  6.98057277], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=63.6878, distance_step=16.7181, real_delta_time=0.1115, sim_delta_time=1.1145
+[LOG-move_drone] pos=[29.47281381  6.98081705], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=46.9697, distance_step=16.6699, real_delta_time=0.1111, sim_delta_time=1.1113
+[LOG-move_drone] pos=[29.63951257  6.98106062], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=30.2998, distance_step=16.6468, real_delta_time=0.1110, sim_delta_time=1.1098
+[LOG-move_drone] pos=[29.8059803   6.98130385], height=500.0, target=[29.94251038  6.98150335], start_leg=[0.01596934 6.93777603], start_energy=25.0, leg_in_progress=True
+[LOG-move_drone] distance_to_target=13.6530, distance_step=16.7200, real_delta_time=0.1115, sim_delta_time=1.1147
+[LOG-calc_energy] start=[0.01596934 6.93777603], end=[29.94251038  6.98150335], dx=2992.65, dy=4.37, dist=2992.66, h0=500.00, h1=0.00, dh=-500.00, horiz=29926.57, vert=20000.00, systems=997.55, total=50924.13, Вт·ч=14.1456
+[LOG-calc_energy] start=[29.94251038  6.98150335], end=[0.01596934 6.93777603], dx=-2992.65, dy=-4.37, dist=2992.66, h0=0.00, h1=500.00, dh=500.00, horiz=29926.57, vert=48415.00, systems=997.55, total=79339.13, Вт·ч=22.0386
+[LOG-ЭТАП] СТАРТ: 25.00 Вт·ч | ЭТАП: 14.15 Вт·ч | ОСТАТОК: 10.85 Вт·ч
+[LOG-ВОЗВРАТ] Требуется на возврат: 22.04 Вт·ч | Остаток после этапа: 10.85 Вт·ч | Достаточно? НЕТ
+
+[DEBUG] Установка оставшегося заряда на 10.85 Вт·ч (метод: remaining_capacity_watt_hours, строка: 268)
+Стек вызова:
+  File "C:\Users\my_ru\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\matplotlib\animation.py", line 1157, in _draw_next_frame
+    self._draw_frame(framedata)
+  File "C:\Users\my_ru\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\matplotlib\animation.py", line 1789, in _draw_frame
+    self._drawn_artists = self._func(framedata, *self._args)
+  File "C:\Users\my_ru\Downloads\code\Diplommm.py", line 939, in update_frame
+    return self.move_drone(frame)
+  File "C:\Users\my_ru\Downloads\code\Diplommm.py", line 1522, in move_drone
+    self.remaining_capacity_watt_hours = remaining_after_leg
+  File "C:\Users\my_ru\Downloads\code\Diplommm.py", line 268, in remaining_capacity_watt_hours
+    self._log_capacity_change(value)
+  File "C:\Users\my_ru\Downloads\code\Diplommm.py", line 248, in _log_capacity_change
+    stack = ''.join(traceback.format_stack(limit=6))
+
+
+[LOG-handle_arrival] Прибытие: drone_pos=[29.94251038  6.98150335], target_pos=[29.94251038  6.98150335], remaining_capacity=10.85 Вт·ч, height=0.00
+Дрон достиг конечной точки маршрута! Начинаем обратный путь.
+[LOG-calc_energy] start=[29.94251038  6.98150335], end=[0.01596934 6.93777603], dx=-2992.65, dy=-4.37, dist=2992.66, h0=0.00, h1=500.00, dh=500.00, horiz=29926.57, vert=48415.00, systems=997.55, total=79339.13, Вт·ч=22.0386
+[LOG-ВОЗВРАТ-АВТО] Требуется на возврат: 22.04 Вт·ч | Остаток сейчас: 10.85 Вт·ч | Достаточно? НЕТ
+[LOG-calc_energy] start=[29.94251038  6.98150335], end=[ 5 10], dx=-2494.25, dy=301.85, dist=2512.45, h0=0.00, h1=490.00, dh=490.00, horiz=25124.49, vert=47446.70, systems=837.48, total=73408.68, Вт·ч=20.3913
+[LOG-calc_energy] start=[29.94251038  6.98150335], end=[25 10], dx=-494.25, dy=301.85, dist=579.13, h0=0.00, h1=490.00, dh=490.00, horiz=5791.35, vert=47446.70, systems=193.04, total=53431.09, Вт·ч=14.8420
+На обратном пути после конечной точки: недостаточно заряда для полета ни до стартовой точки, ни до ближайшей док-станции для подзарядки. Миссия аварийно завершена.
+Миссия не завершена, но маршрут неактуален. Анимация остановлена.
+
