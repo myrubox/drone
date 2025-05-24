@@ -1041,7 +1041,6 @@ class Simulation:
         self.remaining_capacity_watt_hours = self.BATTERY_CAPACITY_WATT_HOURS  # Сброс заряда батареи
         self.charge = self.remaining_capacity_watt_hours / self.BATTERY_CAPACITY_WATT_HOURS
         self.is_charging = False
-        self.has_charged = False
         self.is_landing = False
         self.mission_started = False
         self.mission_active = False
@@ -1320,7 +1319,6 @@ class Simulation:
             self.drone_pos = self.target_pos.copy()  # Устанавливаем позицию точно на цель
             self.update_log(f"Дрон достиг цели: {self.target_pos}.")
             self.handle_arrival()
-            self.mission_active = False
         else:
             # Двигаем дрон в сторону цели
             direction_normalized = direction / np.linalg.norm(direction)  # Нормализация вектора
@@ -1584,8 +1582,8 @@ class Simulation:
 
     def charge_at_station(self, station_idx: int):
         """Реалистичная зарядка дрона на док-станции с учетом фаз CC и CV."""
-        if self.is_charging or getattr(self, 'has_charged', False):
-            self.update_log("Зарядка уже активна или завершена. Повторная зарядка невозможна.")
+        if self.is_charging:
+            self.update_log("Зарядка уже активна. Повторная зарядка невозможна.")
             return
 
         # Проверка высоты
@@ -1666,6 +1664,7 @@ class Simulation:
                 f"Заряд: {self.charge * 100:.2f}% ({self.remaining_capacity_watt_hours:.2f} Вт·ч). "
                 f"Мощность: {power:.2f} Вт, Ток: {current:.2f} А, Напряжение: {voltage:.2f} В."
             )
+            self.update_ui()
 
             if self.charge >= 0.9999:
                 self.complete_charge()
@@ -1704,7 +1703,6 @@ class Simulation:
         self.remaining_capacity_watt_hours = self.BATTERY_CAPACITY_WATT_HOURS
         self.update_log("Зарядка завершена. Батарея дрона полностью заряжена.")
         self.is_charging = False
-        self.has_charged = True
 
         # Обновление графика при завершении зарядки
         self.plot_charge_graph()
@@ -1719,6 +1717,8 @@ class Simulation:
             """Обновление высоты при подъеме/спуске."""
             if not self.is_landing:
                 self.update_log("Подъем завершен. Состояние посадки отключено (is_landing=False).")
+                # --- КЛЮЧЕВОЙ МОМЕНТ ---
+                # Передвигаем дрона к следующей точке маршрута после зарядки!
                 self.resume_mission_after_charge()  # Продолжение маршрута после зарядки
                 return
 
@@ -1736,6 +1736,7 @@ class Simulation:
                 self.is_landing = False
                 self.update_log(f"Дрон достиг рабочей высоты: {self.target_height:.2f} м. "
                                 f"Флаг is_landing={self.is_landing}. Начинаем продолжение миссии.")
+                # --- КЛЮЧЕВОЙ МОМЕНТ ---
                 self.resume_mission_after_charge()  # Продолжаем маршрут после зарядки
                 return
 
@@ -1800,22 +1801,32 @@ class Simulation:
 
     def complete_simulation(self):
         """Завершение симуляции и остановка таймера."""
-        # Завершаем миссию только если достигнута конечная точка маршрута
-        if np.linalg.norm(self.drone_pos - self.end_pos) < 0.1:
+        # Проверяем: если есть маршрут route_points, то завершаем по последней точке маршрута
+        mission_done = False
+        if hasattr(self, "route_points") and isinstance(self.route_points, list) and len(self.route_points) > 0:
+            last_point = self.route_points[-1]
+            if np.linalg.norm(self.drone_pos - last_point) < 0.1:
+                mission_done = True
+        # Иначе - по старой логике (end_pos)
+        elif self.end_pos is not None and np.linalg.norm(self.drone_pos - self.end_pos) < 0.1:
+            mission_done = True
+
+        if mission_done:
+            self.mission_active = False
+            self.is_landing = False
             self.stop_timer()
             if hasattr(self, 'animation') and self.animation and self.animation.event_source:
                 self.animation.event_source.stop()
 
-            # Установка флагов завершения
-            self.mission_active = False
-            self.is_landing = False
-
-            # Лог финального времени и завершения миссии
             self.update_log(f"Симуляция завершена за {self.simulation_time:.1f} секунд.")
             self.update_log("Дрон успешно завершил миссию.")
             self.update_ui()
         else:
-            self.update_log("Миссия не завершена. Дрон продолжает выполнение задания.")
+            # Если не финальная точка — не продолжаем вечный цикл!
+            self.mission_active = False
+            if hasattr(self, 'animation') and self.animation and self.animation.event_source:
+                self.animation.event_source.stop()
+            self.update_log("Миссия не завершена, но маршрут неактуален. Анимация остановлена.")
 
 if __name__ == "__main__":
     root = tk.Tk()
