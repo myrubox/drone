@@ -190,6 +190,7 @@ class Simulation:
         self.mission_active = False  # Флаг активности миссии
         self.is_forced_landing = False  # Флаг принудительной посадки
         self.is_landing = False  # Флаг процесса посадки
+        self.returning_home = False  # сейчас летим вперед
 
         # Параметры маршрута
         self.start_pos = None  # Начальная позиция
@@ -1197,13 +1198,12 @@ class Simulation:
         return artists
 
     def handle_arrival(self) -> None:
-        """Обработка достижения цели или станции."""
+        """Обработка достижения цели (конечной точки, стартовой точки или станции)."""
         self.drone_pos = self.target_pos.copy()
 
-        # Проверка на достижение станции
+        # 1. Если дрон прилетел на станцию — посадка/зарядка
         for i, station in enumerate(self.stations):
             if np.linalg.norm(self.drone_pos - np.array(station)) < 0.1:
-                # Начало посадки/подъема
                 self.is_landing = True
                 self.target_height = self.station_heights[i]
                 self.update_log(f"Дрон достиг станции {i + 1}: {station}, инициируется посадка/подъем.")
@@ -1219,19 +1219,44 @@ class Simulation:
                 )
                 return
 
-        # Если достигли точки маршрута (не станции), переходим к следующей
-        if hasattr(self, "route_points") and self.current_route_index + 1 < len(self.route_points):
-            self.current_route_index += 1
-            self.target_pos = self.route_points[self.current_route_index].copy()
-            self.route_line.set_data([self.drone_pos[0], self.target_pos[0]], [self.drone_pos[1], self.target_pos[1]])
-            self.update_log(f"Переход к следующей точке маршрута: {self.target_pos}")
-            self.check_and_handle_feasibility()
+        # 2. Если дрон достиг конечной точки (конец "туда") — начинаем обратный путь
+        if not getattr(self, "returning_home", False) and np.linalg.norm(self.drone_pos - self.end_pos) < 0.1:
+            self.update_log("Дрон достиг конечной точки маршрута! Начинаем обратный путь.")
+            self.returning_home = True
+            self.target_pos = self.start_pos.copy()
+            self.route_line.set_data(
+                [self.drone_pos[0], self.target_pos[0]],
+                [self.drone_pos[1], self.target_pos[1]]
+            )
             self.mission_active = True
             self.start_animation()
-        else:
-            # Конечная точка маршрута (вернулись обратно)
-            self.update_log("Маршрут туда-обратно полностью завершён.")
+            return
+
+        # 3. Если дрон долетел до стартовой точки "обратно" — миссия завершена
+        if getattr(self, "returning_home", False) and np.linalg.norm(self.drone_pos - self.start_pos) < 0.1:
+            self.update_log("Дрон вернулся на стартовую точку. Маршрут туда-обратно полностью завершён.")
+            self.returning_home = False
             self.complete_simulation()
+            return
+
+        # 4. Если есть промежуточные точки маршрута — переход к следующей
+        if hasattr(self, "route_points") and hasattr(self, "current_route_index"):
+            if self.current_route_index + 1 < len(self.route_points):
+                self.current_route_index += 1
+                self.target_pos = self.route_points[self.current_route_index].copy()
+                self.route_line.set_data(
+                    [self.drone_pos[0], self.target_pos[0]],
+                    [self.drone_pos[1], self.target_pos[1]]
+                )
+                self.update_log(f"Переход к следующей точке маршрута: {self.target_pos}")
+                self.check_and_handle_feasibility()
+                self.mission_active = True
+                self.start_animation()
+                return
+
+        # 5. Если нет других условий — миссия завершена
+        self.update_log("Маршрут туда-обратно полностью завершён.")
+        self.complete_simulation()
 
     def find_best_landing_station(self) -> Tuple[Optional[int], float]:
         """Поиск оптимальной станции для посадки."""
@@ -1446,23 +1471,39 @@ class Simulation:
         return True
 
     def check_mission_feasibility(self) -> bool:
-        """Проверка возможности выполнения миссии."""
-        dx = (self.end_pos[0] - self.start_pos[0]) * self.cell_size
-        dy = (self.end_pos[1] - self.start_pos[1]) * self.cell_size
-        distance = np.sqrt(dx * dx + dy * dy)
+        """Проверка возможности выполнения всей миссии туда-обратно.
+        Если не хватает заряда — инициируется автоматическая посадка на ближайшую станцию."""
 
-        required_energy = distance * (self.HORIZONTAL_ENERGY + self.SYSTEMS_ENERGY)
-        available_energy = self.charge * self.BATTERY_CAPACITY * (1 - self.safety_margin)
+        # Энергия на прямой путь (туда)
+        energy_there = self.calculate_energy_consumption(
+            self.start_pos, self.end_pos,
+            self.drone_height, 0  # или нужная высота в end_pos
+        )
+        # Энергия на обратный путь (обратно)
+        energy_back = self.calculate_energy_consumption(
+            self.end_pos, self.start_pos,
+            0, self.drone_height  # если возвращаемся на высоту дрона
+        )
 
-        if required_energy > available_energy:
-            self.update_log(
-                f"НЕДОСТАТОЧНО ЗАРЯДА! Требуется {required_energy:.0f} Дж, доступно {available_energy:.0f} Дж")
+        total_energy_needed = energy_there + energy_back
 
+        # Доступная энергия в Вт·ч
+        available_energy = self.remaining_capacity_watt_hours  # или self.charge * self.BATTERY_CAPACITY_WATT_HOURS
+
+        self.update_log(
+            f"Для маршрута туда-обратно требуется {total_energy_needed:.2f} Вт·ч, доступно: {available_energy:.2f} Вт·ч."
+        )
+
+        if total_energy_needed > available_energy:
+            self.update_log("❌ Недостаточно заряда для выполнения миссии туда-обратно!")
+
+            # Поиск ближайшей станции (как было в старой версии)
             best_station, station_energy = self.find_best_landing_station()
 
-            if best_station is not None and station_energy < self.charge * self.BATTERY_CAPACITY:
+            if best_station is not None and station_energy < available_energy:
                 self.update_log(
-                    f"Автоматическая посадка на станцию {best_station + 1} (требуется {station_energy:.0f} Дж)")
+                    f"Автоматическая посадка на станцию {best_station + 1} (требуется {station_energy:.2f} Вт·ч)"
+                )
                 self.target_pos = np.array(self.stations[best_station])
                 self.is_forced_landing = True
 
@@ -1476,6 +1517,10 @@ class Simulation:
                 self.start_animation()
                 return False
 
+            # Если ни одна станция не достижима — просто не разрешаем миссию
+            return False
+
+        self.update_log("✅ Заряда достаточно для выполнения всей миссии туда-обратно.")
         return True
 
     def check_and_handle_feasibility(self):
@@ -1750,18 +1795,25 @@ class Simulation:
         update_height()
 
     def resume_mission_after_charge(self):
-        """Продолжение маршрута после зарядки (к следующей точке маршрута)."""
+        """Продолжение маршрута после зарядки (летим к нужной точке в зависимости от направления)."""
         self.update_log("Продолжаем маршрут после зарядки.")
-        if hasattr(self, "route_points") and self.current_route_index < len(self.route_points):
-            self.target_pos = self.route_points[self.current_route_index].copy()
-            self.route_line.set_data([self.drone_pos[0], self.target_pos[0]], [self.drone_pos[1], self.target_pos[1]])
-            self.mission_active = True
-            # Перед продолжением обязательно повторно проверить возможность сегмента!
-            self.check_and_handle_feasibility()
-            self.start_animation()
+        self.is_landing = False
+
+        if self.returning_home:
+            # Летим к стартовой точке (возвращаемся домой)
+            self.target_pos = self.start_pos.copy()
+            self.update_log(f"Цель после зарядки: стартовая точка {self.target_pos}.")
         else:
-            self.update_log("Все точки маршрута пройдены после зарядки.")
-            self.complete_simulation()
+            # Летим к конечной точке
+            self.target_pos = self.end_pos.copy()
+            self.update_log(f"Цель после зарядки: конечная точка {self.target_pos}.")
+
+        self.mission_active = True
+        self.route_line.set_data(
+            [self.drone_pos[0], self.target_pos[0]],
+            [self.drone_pos[1], self.target_pos[1]]
+        )
+        self.start_animation()
 
     def resume_mission(self):
         """Продолжение миссии после зарядки."""
