@@ -1510,53 +1510,67 @@ class Simulation:
 
     def plan_full_mission_with_charging(self, start, end):
         """
-        Строит полный маршрут туда-обратно с учетом промежуточных станций для подзарядки.
+        Строит маршрут туда-обратно с учетом промежуточных станций для подзарядки.
         Возвращает список точек маршрута [A, S1, ..., B, S2, ..., A] или None если невозможно.
         """
         import numpy as np
+        from collections import deque
 
+        # Все точки: старт, станции, конец (индексы: 0, 1, ..., N-2, N-1)
         all_points = [start] + [np.array(s) for s in self.stations] + [end]
+        num_points = len(all_points)
         start_idx = 0
-        end_idx = len(all_points) - 1
+        end_idx = num_points - 1
         max_energy = self.BATTERY_CAPACITY_WATT_HOURS
 
-        # Энергозатраты между всеми парами точек (без высоты, если нужно — доработай)
-        def energy_func(p1, p2):
-            # Можно добавить высоту, если нужно
-            return self.calculate_energy_consumption(p1, p2, self.drone_height, self.drone_height)
+        def energy_func(i, j, start_height, end_height):
+            return self.calculate_energy_consumption(
+                all_points[i], all_points[j], start_height, end_height
+            )
 
-        # Поиск кратчайшего пути с ограничением на энергозатраты между остановками
-        from queue import PriorityQueue
-
-        def find_path(s_idx, t_idx):
-            N = len(all_points)
-            # (суммарная энергия, остановки, current_idx, путь)
-            q = PriorityQueue()
-            q.put((0, 0, s_idx, [s_idx]))
-            visited = {}
-
-            while not q.empty():
-                total_e, stops, curr_idx, path = q.get()
-                if (curr_idx, stops) in visited and visited[(curr_idx, stops)] <= total_e:
-                    continue
-                visited[(curr_idx, stops)] = total_e
-                if curr_idx == t_idx:
+        # Для симметрии: туда и обратно!
+        def search_path(a_idx, b_idx, start_height, end_height):
+            queue = deque()
+            # (current_idx, путь [индексы], текущая_высота)
+            queue.append((a_idx, [a_idx], start_height))
+            visited = set()
+            while queue:
+                curr_idx, path, curr_height = queue.popleft()
+                if curr_idx == b_idx:
                     return path
-                for next_idx in range(N):
+                # после каждой посадки на станцию (или в начальную точку) заряд всегда полный!
+                for next_idx in range(num_points):
                     if next_idx == curr_idx:
                         continue
-                    if next_idx in path:
-                        continue  # не возвращаемся в одну и ту же точку
-                    e = energy_func(all_points[curr_idx], all_points[next_idx])
-                    if e <= max_energy:
-                        q.put((total_e + e, stops + 1, next_idx, path + [next_idx]))
+                    # не возвращаемся сразу назад
+                    if len(path) > 1 and next_idx == path[-2]:
+                        continue
+                    # высота назначения
+                    next_height = 0
+                    for i, st in enumerate(self.stations):
+                        if np.allclose(all_points[next_idx], st, atol=1e-2):
+                            next_height = self.station_heights[i]
+                            break
+                    # Энергия на этот шаг
+                    energy = energy_func(curr_idx, next_idx, curr_height, next_height)
+                    if energy <= max_energy:
+                        # после посадки на станцию (или в b_idx) — высота обновляется
+                        after_landing_height = next_height if next_idx != end_idx else end_height
+                        state = (next_idx, after_landing_height)
+                        # чтобы не зациклиться: не посещать одну и ту же точку подряд с одной и той же высотой
+                        if (next_idx, tuple(path), after_landing_height) in visited:
+                            continue
+                        visited.add((next_idx, tuple(path), after_landing_height))
+                        queue.append((next_idx, path + [next_idx], after_landing_height))
             return None
 
-        path_there_idx = find_path(start_idx, end_idx)
-        path_back_idx = find_path(end_idx, start_idx)
-        if path_there_idx and path_back_idx:
-            # Собираем полный маршрут
-            idxs = path_there_idx + path_back_idx[1:]
+        # Туда (с рабочей высоты), обратно (с рабочей высоты)
+        drone_height = self.drone_height
+        path_there = search_path(start_idx, end_idx, drone_height, drone_height)
+        path_back = search_path(end_idx, start_idx, drone_height, drone_height)
+        if path_there and path_back:
+            # полный маршрут: туда + обратно (без дублирования точки разворота)
+            idxs = path_there + path_back[1:]
             route = [all_points[i] for i in idxs]
             return route
         else:
