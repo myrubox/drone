@@ -744,36 +744,34 @@ class Simulation:
         # Обновляем холст для отображения изменений
         self.canvas_loss.draw()
 
-    def update_drone_visuals(self):
-        """Централизованное обновление всех визуальных параметров дрона."""
+    def update_drone_visuals(self, force_set_size: bool = False):
+        """Централизованное обновление всех визуальных параметров дрона.
+        force_set_size=True — немедленно задать размер дрона по текущей высоте (без плавного перехода).
+        """
         # Определяем целевую высоту
         if self.is_landing and self.target_pos is not None:
             try:
-                # Определяем высоту целевой станции
                 station_idx = self.stations.index(self.target_pos.tolist())
                 target_height = self.station_heights[station_idx]
             except ValueError:
-                # Если станция не найдена, используем текущую высоту
                 target_height = self.target_height
         else:
-            # Если дрон не находится в режиме посадки, используем текущую высоту
             target_height = 0
 
         # Расчет соотношения высоты (чем ниже высота, тем меньше размер)
-        height_ratio = max(0, min(1, self.drone_height / 5000.0))  # Высота относительно максимальной (5000 м)
+        height_ratio = max(0, min(1, self.drone_height / 5000.0))
 
         # Интерполяция размера
         target_size = self.min_drone_size + (self.max_drone_size - self.min_drone_size) * height_ratio
 
-        # Плавное изменение размера дрона
-        if self.is_landing or self.drone_height != self.target_height:
-            self.drone_size += (target_size - self.drone_size) * 0.2  # Плавный переход (20% за кадр)
+        if force_set_size:
+            self.drone_size = target_size  # Немедленно применить размер
+        elif self.is_landing or self.drone_height != self.target_height:
+            self.drone_size += (target_size - self.drone_size) * 0.2  # Плавный переход
 
         self.drone_icon.set_sizes([self.drone_size ** 2])
-        self.drone_icon.set_offsets(self.drone_pos)  # Обновляем позицию
-        self.drone_icon.set_zorder(10)  # Устанавливаем порядок отображения
-
-        # Принудительное обновление карты
+        self.drone_icon.set_offsets(self.drone_pos)
+        self.drone_icon.set_zorder(10)
         self.canvas_map.draw_idle()
 
     def update_ui(self):
@@ -840,9 +838,10 @@ class Simulation:
             self.station_heights[0] = float(self.entries['station1_height'].get())
             self.station_heights[1] = float(self.entries['station2_height'].get())
             self.BATTERY_CAPACITY_WATT_HOURS = float(self.entries['battery_capacity_watt_hours'].get())
-            self.BATTERY_CAPACITY = self.BATTERY_CAPACITY_WATT_HOURS * 3600  # Перевод в джоули
-            self.remaining_capacity_watt_hours = self.BATTERY_CAPACITY_WATT_HOURS  # Начальный заряд
+            self.BATTERY_CAPACITY = self.BATTERY_CAPACITY_WATT_HOURS * 3600
+            self.remaining_capacity_watt_hours = self.BATTERY_CAPACITY_WATT_HOURS
             self.update_stations_info()
+            self.update_drone_visuals(force_set_size=True)  # <--- вот здесь
             self.update_ui()
         except ValueError:
             messagebox.showerror("Ошибка", "Некорректные значения параметров")
@@ -882,10 +881,13 @@ class Simulation:
                     self.start_icon.set_data([x], [y])
                     self.start_pos = np.array([x, y])
                     self.drone_pos = np.array([x, y])
+                    self.drone_height = float(self.entries['drone_height'].get())  # синхронизация с параметрами
                     self.update_log(f"Начальная точка установлена: ({x:.2f}, {y:.2f})")
                     self.target_pos = None
-                    self.end_icon.set_data([], [])  # Очищаем конечную точку визуально
+                    self.end_icon.set_data([], [])
                     self.end_pos = None
+                    self.drone_icon.set_color('yellow')
+                    self.update_drone_visuals(force_set_size=True)  # <--- вот здесь
                 elif self.target_pos is None:
                     self.end_icon.set_data([x], [y])
                     self.end_pos = np.array([x, y])
@@ -1536,7 +1538,6 @@ class Simulation:
             )
             self.route_line.set_linestyle('--')
             self.route_line.set_color('b')
-            self.drone_icon.set_color('k')
 
             self.update_ui()
 
