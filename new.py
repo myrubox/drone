@@ -160,86 +160,90 @@ class Simulation:
                  charging_current=10,
                  charging_efficiency=0.9,
                  battery_capacity_watt_hours=80):
-        """Инициализация класса Simulation."""
+        """
+        Инициализация класса Simulation.
+        Все параметры, связанные с визуализацией (Figure, Axes, plot/scatter-объекты),
+        должны создаваться только ПОСЛЕ инициализации Figure/Axes (обычно — в init_simulation_tab).
+        """
         self.root = root
         self.root.title("Система управления БПЛА")
 
-        # Константы энергии (перенесены в атрибуты объекта)
+        # --- Энергетические параметры ---
         self.HORIZONTAL_ENERGY = 10  # Энергия на горизонтальный полет (Дж/м)
         self.CLIMB_ENERGY = 96.83  # Энергия на подъем (Дж/м)
         self.DESCENT_ENERGY = 40  # Энергия на спуск (Дж/м)
         self.SYSTEMS_ENERGY_WATTS = 5  # Системное энергопотребление (Вт)
-        self.SYSTEMS_ENERGY = self.SYSTEMS_ENERGY_WATTS / 3600  # Системное энергопотребление (Дж/сек)
+        self.SYSTEMS_ENERGY = self.SYSTEMS_ENERGY_WATTS / 3600  # (Дж/сек)
         self.OCCUPATION_PENALTY = 0.2  # Штраф за занятую станцию
 
-        # Параметры батареи
+        # --- Параметры батареи ---
         self.BATTERY_CAPACITY_WATT_HOURS = battery_capacity_watt_hours
-        self.BATTERY_CAPACITY = self.BATTERY_CAPACITY_WATT_HOURS * 3600  # Перевод в джоули
-        self.VOLTAGE_BATTERY = 15.4  # Напряжение батареи (В)
-        self.INTERNAL_RESISTANCE = self.VOLTAGE_BATTERY / 4  # Внутреннее сопротивление батареи (Ом)
+        self.BATTERY_CAPACITY = self.BATTERY_CAPACITY_WATT_HOURS * 3600  # В джоулях
+        self.VOLTAGE_BATTERY = 15.4
+        self.INTERNAL_RESISTANCE = self.VOLTAGE_BATTERY / 4
 
-        # Параметры зарядки
-        self.CHARGING_CURRENT = charging_current  # Ток зарядки (А)
-        self.CHARGING_VOLTAGE = charging_voltage  # Напряжение во время зарядки (В)
-        self.CHARGING_EFFICIENCY = charging_efficiency  # КПД зарядки
+        # --- Параметры зарядки ---
+        self.CHARGING_CURRENT = charging_current
+        self.CHARGING_VOLTAGE = charging_voltage
+        self.CHARGING_EFFICIENCY = charging_efficiency
 
-        # Состояние зарядки
-        self.charge = 0.8  # Текущий заряд батареи (в долях от полной емкости)
-        self.is_charging = False  # Флаг состояния зарядки
+        # --- Состояние зарядки ---
+        self.charge = 0.8
+        self.is_charging = False
 
-        # Параметры карты
-        self.grid_width = 30  # Ширина карты в клетках
-        self.grid_height = 20  # Высота карты в клетках
-        self.cell_size = 100  # Размер клетки (100м x 100м)
+        # --- Параметры карты ---
+        self.grid_width = 30
+        self.grid_height = 20
+        self.cell_size = 100
 
-        # Параметры дрона
-        self.drone_mass = 0.9  # Масса дрона (в кг)
-        self.drone_height = 500.0  # Начальная высота дрона
-        self.target_height = 0.0  # Целевая высота
-        self.last_logged_height = self.drone_height  # Устанавливаем начальное значение
-        self.remaining_capacity_watt_hours = self.BATTERY_CAPACITY_WATT_HOURS  # Начальный заряд в Вт·ч
+        # --- Параметры дрона ---
+        self.drone_mass = 0.9
+        self.drone_height = 500.0
+        self.target_height = 0.0
+        self.last_logged_height = self.drone_height
+        self.remaining_capacity_watt_hours = self.BATTERY_CAPACITY_WATT_HOURS
         self.charge = self.remaining_capacity_watt_hours / self.BATTERY_CAPACITY_WATT_HOURS
-        self.flight_time = 30 * 60  # Время полета (30 минут в секундах)
-        self.energy_usage = 300  # Максимальное потребление энергии (Вт·ч)
-        self.range = 15000  # Радиус действия (15 км)
-        self.horizontal_energy_per_meter = self.HORIZONTAL_ENERGY  # Дж/м для горизонтального перемещения
-        self.climb_energy_per_meter = self.CLIMB_ENERGY  # Дж/м для подъема
-        self.descent_energy_per_meter = self.DESCENT_ENERGY  # Дж/м для спуска
-        self.system_energy_per_second = self.SYSTEMS_ENERGY  # Дж/сек для систем
+        self.flight_time = 30 * 60
+        self.energy_usage = 300
+        self.range = 15000
+        self.horizontal_energy_per_meter = self.HORIZONTAL_ENERGY
+        self.climb_energy_per_meter = self.CLIMB_ENERGY
+        self.descent_energy_per_meter = self.DESCENT_ENERGY
+        self.system_energy_per_second = self.SYSTEMS_ENERGY
 
-        # Визуализация дрона
-        self.drone_size = 15  # Начальный размер дрона
-        self.max_drone_size = 20  # Максимальный размер (в зависимости от высоты)
-        self.min_drone_size = 5  # Минимальный размер
+        # --- Визуализация дрона (размеры) ---
+        self.drone_size = 15
+        self.max_drone_size = 20
+        self.min_drone_size = 5
 
-        # Скорость дрона
-        self.real_speed = 15.0  # Реальная горизонтальная скорость дрона (м/с)
-        self.vertical_speed = 2.5  # Скорость подъема/спуска (м/с)
-        self.simulation_speed = 1.0  # Коэффициент ускорения симуляции
-        self.frame_interval = 100  # Интервал между кадрами в миллисекундах
+        # --- Скорость дрона ---
+        self.real_speed = 15.0
+        self.vertical_speed = 2.5
+        self.simulation_speed = 1.0
+        self.frame_interval = 100
 
-        # Скорость в клетках/секунду
-        self.speed = self.real_speed / self.cell_size  # Скорость в клетках/секунду
+        # --- Скорость в клетках/секунду ---
+        self.speed = self.real_speed / self.cell_size
 
-        # Параметры станций
-        self.stations = [[5, 10], [25, 10]]  # Координаты станций (в клетках)
-        self.station_heights = [100.0, 100.0]  # Высота станций (в метрах)
-        self.station_statuses = [False, False]  # Статус станций (занята/свободна)
+        # --- Параметры станций ---
+        self.stations = [[5, 10], [25, 10]]
+        self.station_heights = [100.0, 100.0]
+        self.station_statuses = [False, False]
 
-        # Состояние дрона
-        self.drone_pos = np.array([15, 10], dtype=float)  # Начальная позиция дрона
-        self.drone_height = 500.0  # Высота дрона
-        self.mission_active = False  # Флаг активности миссии
-        self.is_forced_landing = False  # Флаг принудительной посадки
-        self.is_landing = False  # Флаг процесса посадки
-        self.returning_home = False  # сейчас летим вперед
+        # --- Состояние дрона и маршрут ---
+        self.drone_pos = np.array([15, 10], dtype=float)  # ВАЖНО: до drone_path!
+        self.drone_path = [self.drone_pos.copy()]  # История траектории дрона (для "следа")
+        self.mission_active = False
+        self.is_forced_landing = False
+        self.is_landing = False
+        self.returning_home = False
 
-        # Параметры маршрута
-        self.start_pos = None  # Начальная позиция
-        self.target_pos = None  # Целевая позиция (текущая цель)
-        self.end_pos = None  # Конечная позиция маршрута
+        # --- Параметры маршрута ---
+        self.start_pos = None
+        self.target_pos = None
+        self.end_pos = None
 
-        # Создание вкладок
+        # --- GUI: вкладки ---
         self.notebook = ttk.Notebook(self.root)
         self.tab_params = ttk.Frame(self.notebook)
         self.tab_plot = ttk.Frame(self.notebook)
@@ -251,12 +255,18 @@ class Simulation:
         self.notebook.add(self.tab_sim, text="Симуляция")
         self.notebook.pack(expand=True, fill='both')
 
-        # Инициализация вкладок
+        # --- Инициализация вкладок (где создается Figure и self.ax!) ---
         self.init_parameters_tab()
         self.init_plot_tab()
         self.init_simulation_tab()
+        # ВАЖНО: только после этого существуют self.fig_map и self.ax!
 
-        # Инициализация нейросети
+        # --- Визуализация маршрута и дрона ---
+        # ВАЖНО: создавать plot-объекты только после создания self.ax!
+        self.route_line, = self.ax.plot([], [], 'y--', linewidth=1, alpha=1, zorder=2)
+        # (остальные plot/scatter-объекты так же здесь, если нужно)
+
+        # --- Инициализация нейросети ---
         self.init_neural_network()
 
     def export_log(self):
@@ -439,16 +449,16 @@ class Simulation:
         self.canvas_charge = FigureCanvasTkAgg(self.fig_charge, master=self.figures_frame)
         self.canvas_charge.get_tk_widget().pack(side="top", fill="both", expand=True)
 
-    def plot_charge_graph(self, target_ax=None, legend_below=False):
-        """
-        Отрисовка графика зарядки на основной вкладке или в отдельном окне/мини-графике.
-        target_ax — если передан, рисует в переданной оси (например, для мини-графика или большого окна).
-        legend_below — если True, размещает легенду под графиком (для отдельного окна).
-        """
-        import numpy as np
-        import matplotlib.pyplot as plt
+    def plot_charge_graph(self, target_ax=None, legend_below=False, for_mini=False):
 
         if not hasattr(self, 'charge_log') or not self.charge_log.get("time"):
+            if for_mini and hasattr(self, "mini_charge_ax"):
+                self.mini_charge_ax.clear()
+                self.mini_charge_ax.set_title('Зарядка', fontsize=10)
+                self.mini_charge_ax.set_xlabel('Время (с)', fontsize=9)
+                self.mini_charge_ax.set_ylabel('Заряд (%)', fontsize=9)
+                self.mini_charge_ax.set_ylim(0, 100)
+                self.mini_charge_canvas.draw()
             return
 
         times = self.charge_log["time"]
@@ -464,26 +474,33 @@ class Simulation:
         currents = currents[:min_len]
         voltages = voltages[:min_len]
 
-        # Где рисовать график?
-        if target_ax is None:
-            # Основной большой график (на вкладке "Графики")
+        if target_ax is None and not for_mini:
             self.fig_charge.clf()
             ax_charge = self.fig_charge.add_subplot(111)
             ax_charge_right = ax_charge.twinx()
             canvas = self.canvas_charge
+        elif for_mini and hasattr(self, "mini_charge_ax"):
+            self.mini_charge_ax.clear()
+            ax_charge = self.mini_charge_ax
+            ax_charge.set_title('Зарядка', fontsize=10)
+            ax_charge.set_xlabel('Время (с)', fontsize=9)
+            ax_charge.set_ylabel('Заряд (%)', fontsize=9)
+            ax_charge.set_ylim(0, 100)
+            ax_charge.plot(times, percents, color='tab:green', label='Заряд (%)', linewidth=2.2)
+            ax_charge.grid(True, linestyle='--', alpha=0.25)
+            ax_charge.legend(fontsize=8, loc='lower right')
+            self.mini_charge_canvas.draw()
+            return
         else:
-            # Например, мини-график или отдельное окно
             target_ax.clear()
             ax_charge = target_ax
             ax_charge_right = ax_charge.twinx() if hasattr(target_ax, 'twinx') else None
             canvas = None
 
-        # Линии для тока и напряжения
         line_current, = ax_charge.plot(times, currents, color='tab:red', label='Ток зарядки (А)', linewidth=2.5)
         line_voltage, = ax_charge.plot(times, voltages, color='tab:red', linestyle='--', label='Напряжение (В)',
                                        linewidth=2.5)
 
-        # Подписи
         ax_charge.set_ylabel('Ток (А)                Напряжение (В)', fontsize=16, fontweight='bold')
         ax_charge.set_xlabel('Время (сек)', fontsize=16, fontweight='bold')
         ax_charge.tick_params(axis='x', labelsize=14)
@@ -491,26 +508,21 @@ class Simulation:
         ax_charge.grid(True, linestyle='--', alpha=0.6)
         ax_charge.set_title('График зарядки батареи дрона', fontsize=20, fontweight='bold')
 
-        # Линия уровня заряда (правая шкала)
         if ax_charge_right:
             line_percent, = ax_charge_right.plot(times, percents, color='tab:green', label='Заряд (%)', linewidth=2.5)
             ax_charge_right.set_ylabel('Ёмкость аккумулятора (%)', fontsize=16, fontweight='bold')
             ax_charge_right.set_yticks(np.arange(0, 105, 5))
             ax_charge_right.set_ylim(0, 100)
             ax_charge_right.tick_params(axis='y', labelsize=14)
-
-            # Фазы CC и CV
             ax_charge_right.axhspan(0, 90, color='lightblue', alpha=0.08, zorder=0)
             ax_charge_right.axhspan(90, 100, color='lightcoral', alpha=0.10, zorder=0)
-            ax_charge_right.text(-2, 45, "CC", color="tab:blue", fontsize=14, fontweight='bold',
+            ax_charge_right.text(-5, 45, "CC", color="tab:blue", fontsize=14, fontweight='bold',
                                  va='center', ha='left', alpha=0.7, rotation=90, clip_on=False)
-            ax_charge_right.text(-2, 95, "CV", color="tab:red", fontsize=14, fontweight='bold',
+            ax_charge_right.text(-5, 95, "CV", color="tab:red", fontsize=14, fontweight='bold',
                                  va='center', ha='left', alpha=0.7, rotation=90, clip_on=False)
         else:
-            # Для мини-графика без twin оси
             line_percent, = ax_charge.plot(times, percents, color='tab:green', label='Заряд (%)', linewidth=2.5)
 
-        # Легенда
         if ax_charge_right:
             lines_left, labels_left = ax_charge.get_legend_handles_labels()
             lines_right, labels_right = ax_charge_right.get_legend_handles_labels()
@@ -519,10 +531,8 @@ class Simulation:
         else:
             handles, labels = ax_charge.get_legend_handles_labels()
 
-        if legend_below:
-            ax_charge.legend(handles, labels, loc="lower center", fontsize=14, bbox_to_anchor=(0.5, -0.25), ncol=2)
-        else:
-            ax_charge.legend(handles, labels, loc='upper right', fontsize=14)
+
+        ax_charge.legend(handles, labels, loc='upper right', bbox_to_anchor=(1, 0.88), fontsize=14)
 
         if canvas:
             canvas.draw()
@@ -588,7 +598,7 @@ class Simulation:
         # --- Правая колонка: легенда карты ---
         legend_width = 235
         legend_frame = ttk.LabelFrame(main_frame, text="Легенда карты", style="Big.TLabelframe", width=legend_width)
-        legend_frame.pack(side="right", fill="y", padx=2, pady=10)  # Левее
+        legend_frame.pack(side="right", fill="y", padx=2, pady=10)
         legend_frame.pack_propagate(False)
         legend_canvas = tk.Canvas(legend_frame, width=legend_width, height=210)
         legend_canvas.pack()
@@ -616,12 +626,28 @@ class Simulation:
         legend_canvas.create_text(50, y_start + 4 * y_interval + 10, text="- Док-станция занята", anchor="w",
                                   font=("Arial", 12))
 
+        # --- Мини-график зарядки под легендой ---
+        from matplotlib.figure import Figure
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        self.mini_charge_fig = Figure(figsize=(2.2, 1.9), dpi=90)
+        self.mini_charge_ax = self.mini_charge_fig.add_subplot(111)
+        self.mini_charge_ax.set_title('Зарядка', fontsize=10)
+        self.mini_charge_ax.set_xlabel('Время (с)', fontsize=9)
+        self.mini_charge_ax.set_ylabel('Заряд (%)', fontsize=9)
+        self.mini_charge_ax.tick_params(axis='both', labelsize=8)
+        self.mini_charge_ax.set_ylim(0, 100)
+        self.mini_charge_canvas = FigureCanvasTkAgg(self.mini_charge_fig, master=legend_frame)
+        mini_widget = self.mini_charge_canvas.get_tk_widget()
+        mini_widget.config(height=160, width=220)
+        mini_widget.pack(fill="x", expand=False, padx=5, pady=(10, 2))
+        mini_widget.bind("<Button-1>", self.show_big_charge_graph)
+
         # --- Центр: поле симуляции (карта) ---
         map_frame = ttk.Frame(main_frame)
         map_frame.pack(side="left", fill="both", expand=True, padx=5, pady=10)
 
         # ! Важно: уменьшаем высоту, чтобы лог был всегда виден!
-        self.fig_map = Figure(figsize=(10, 5.5), dpi=100)  # По ширине оптимально, по высоте чуть меньше!
+        self.fig_map = Figure(figsize=(10, 5.5), dpi=100)
         self.fig_map.patch.set_facecolor('white')
         self.ax = self.fig_map.add_subplot(111)
         self.fig_map.subplots_adjust(left=0.07, right=0.97, top=0.96, bottom=0.09)
@@ -631,11 +657,17 @@ class Simulation:
         self.canvas_map = FigureCanvasTkAgg(self.fig_map, map_frame)
         self.canvas_map.get_tk_widget().pack(fill="both", expand=True)
         self.canvas_map.mpl_connect("button_press_event", self.on_click)
+        from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
         self.toolbar = NavigationToolbar2Tk(self.canvas_map, map_frame)
         self.toolbar.update()
-        self.route_line, = self.ax.plot([], [], 'b--', linewidth=1, alpha=1, zorder=2)
-        self.drone_icon = self.ax.scatter(self.drone_pos[0], self.drone_pos[1], s=15 ** 2, c='yellow', marker='x',
-                                          linewidths=2, label='Дрон', zorder=3)
+        # --- Линия пути дрона: желтая пунктирная ---
+        self.route_line, = self.ax.plot([], [], 'y--', linewidth=1, alpha=1, zorder=2)
+        # --- Дрон ---
+        self.drone_icon = self.ax.scatter(
+            self.drone_pos[0], self.drone_pos[1],
+            s=15 ** 2, c='yellow', marker='x', linewidths=2, label='Дрон', zorder=3
+        )
+        # --- Начальная и конечная точки ---
         self.start_icon, = self.ax.plot([], [], 'bo', markersize=10, label='Старт', zorder=4)
         self.end_icon, = self.ax.plot([], [], 'ro', markersize=10, label='Финиш', zorder=4)
         if hasattr(self, "add_stations"):
@@ -839,6 +871,13 @@ class Simulation:
         elif self.is_landing or self.drone_height != self.target_height:
             self.drone_size += (target_size - self.drone_size) * 0.2  # Плавный переход
 
+        if hasattr(self, "route_line"):
+            if self.drone_path and len(self.drone_path) > 1:
+                xs, ys = zip(*self.drone_path)
+                self.route_line.set_data(xs, ys)
+            else:
+                self.route_line.set_data([], [])
+
         self.drone_icon.set_sizes([self.drone_size ** 2])
         self.drone_icon.set_offsets(self.drone_pos)
         self.drone_icon.set_zorder(10)
@@ -869,10 +908,6 @@ class Simulation:
 
         # 4. Обновление маршрута (если есть цель)
         if self.target_pos is not None:
-            self.route_line.set_data(
-                [self.drone_pos[0], self.target_pos[0]],
-                [self.drone_pos[1], self.target_pos[1]]
-            )
             self.route_line.set_zorder(5)
         else:
             self.route_line.set_data([], [])
@@ -969,16 +1004,26 @@ class Simulation:
                     self.drone_pos = np.array([x, y])
                     self.drone_height = float(self.entries['drone_height'].get())  # синхронизация с параметрами
                     self.update_log(f"Начальная точка установлена: ({x:.2f}, {y:.2f})")
+                    # Логируем в mission_log только если ещё не было
+                    if not hasattr(self, "start_logged_in_mission_log") or not self.start_logged_in_mission_log:
+                        self.mission_log.insert("end", f"Нач. точка: X={x:.2f}, Y={y:.2f}\n")
+                        self.mission_log.see("end")
+                        self.start_logged_in_mission_log = True
                     self.target_pos = None
                     self.end_icon.set_data([], [])
                     self.end_pos = None
                     self.drone_icon.set_color('yellow')
-                    self.update_drone_visuals(force_set_size=True)  # <--- вот здесь
+                    self.update_drone_visuals(force_set_size=True)
                 elif self.target_pos is None:
                     self.end_icon.set_data([x], [y])
                     self.end_pos = np.array([x, y])
                     self.target_pos = np.array([x, y])
                     self.update_log(f"Конечная точка установлена: ({x:.2f}, {y:.2f})")
+                    # Логируем в mission_log только если ещё не было
+                    if not hasattr(self, "end_logged_in_mission_log") or not self.end_logged_in_mission_log:
+                        self.mission_log.insert("end", f"Кон. точка: X={x:.2f}, Y={y:.2f}\n")
+                        self.mission_log.see("end")
+                        self.end_logged_in_mission_log = True
 
                 # Обновляем белую пунктирную линию
                 if self.start_pos is not None and self.end_pos is not None:
@@ -1000,10 +1045,6 @@ class Simulation:
 
             # Обновляем маршрутную линию (если обе точки есть)
             if self.start_pos is not None and self.target_pos is not None:
-                self.route_line.set_data(
-                    [self.start_pos[0], self.target_pos[0]],
-                    [self.start_pos[1], self.target_pos[1]]
-                )
                 self.update_log("Маршрут успешно обновлен!")
 
             self.canvas_map.draw_idle()
@@ -1060,10 +1101,8 @@ class Simulation:
                 self.animation.event_source.stop()
             self.animation = None
 
-        # Сброс таймера
         self.reset_timer()
 
-        # Сброс состояния и маршрута
         self.drone_pos = np.array([15, 10])
         self.drone_height = 500.0
         self.target_height = 0.0
@@ -1073,19 +1112,21 @@ class Simulation:
         self.is_landing = False
         self.mission_started = False
         self.mission_active = False
+        self.start_logged_in_mission_log = False
+        self.end_logged_in_mission_log = False
         self.route_points = []
         self.current_route_index = None
         self.start_pos = None
         self.target_pos = None
         self.end_pos = None
 
-        # Пересоздание карты и всех объектов
+        self.drone_path = []  # <--- сброс траектории
+
         self.ax.clear()
         self.setup_map_grid()
         self.add_stations()
 
-        # ВАЖНО: пересоздаём все plot-объекты и scatter после очистки оси!
-        self.route_line, = self.ax.plot([], [], 'b--', linewidth=1, alpha=1)
+        self.route_line, = self.ax.plot([], [], 'y--', linewidth=1, alpha=1, zorder=2)
         self.drone_icon = self.ax.scatter(
             self.drone_pos[0], self.drone_pos[1],
             s=15 ** 2, c='yellow', marker='x', linewidths=2, label='Дрон'
@@ -1097,7 +1138,6 @@ class Simulation:
 
         self.canvas_map.draw_idle()
 
-        # Обновление интерфейса
         self.charge_label.config(
             text=f"Заряд: {self.charge * 100:.2f}% ({self.remaining_capacity_watt_hours:.2f} Вт·ч)"
         )
@@ -1325,10 +1365,6 @@ class Simulation:
 
             if can_reach_start:
                 self.target_pos = self.start_pos.copy()
-                self.route_line.set_data(
-                    [self.drone_pos[0], self.target_pos[0]],
-                    [self.drone_pos[1], self.target_pos[1]]
-                )
                 self.mission_active = True
                 self.start_animation()
                 return
@@ -1350,10 +1386,6 @@ class Simulation:
                         f"Недостаточно заряда для обратного пути. Автоматическая посадка и зарядка на станции {best_station + 1}."
                     )
                     self.target_pos = np.array(self.stations[best_station])
-                    self.route_line.set_data(
-                        [self.drone_pos[0], self.target_pos[0]],
-                        [self.drone_pos[1], self.target_pos[1]]
-                    )
                     self.mission_active = True
                     self.start_animation()
                     return
@@ -1385,10 +1417,6 @@ class Simulation:
                     return
 
                 self.target_pos = self.route_points[self.current_route_index].copy()
-                self.route_line.set_data(
-                    [self.drone_pos[0], self.target_pos[0]],
-                    [self.drone_pos[1], self.target_pos[1]]
-                )
                 self.update_log(f"Переход к следующей точке маршрута: {self.target_pos}")
                 self.check_and_handle_feasibility()
                 self.mission_active = True
@@ -1510,10 +1538,6 @@ class Simulation:
                 self.update_log(
                     f"Автоматическая посадка на станцию {best_station + 1} (требуется {min_energy:.2f} Вт·ч)")
                 self.target_pos = np.array(self.stations[best_station])
-                self.route_line.set_data(
-                    [self.drone_pos[0], self.target_pos[0]],
-                    [self.drone_pos[1], self.target_pos[1]]
-                )
                 self.is_forced_landing = True
                 self.mission_active = True
                 if hasattr(self, 'animation') and self.animation and self.animation.event_source:
@@ -1560,14 +1584,12 @@ class Simulation:
         if not self.mission_active or self.target_pos is None:
             return [self.drone_icon, self.route_line]
 
-            # Проверка валидности target_pos
         if np.allclose(self.target_pos, [0, 0], atol=1e-2) and not np.allclose(self.target_pos, self.start_pos,
                                                                                atol=1e-2):
             self.update_log("Ошибка: целевая точка (0,0) невалидна. Миссия не будет продолжена.", level="error")
             self.mission_active = False
             return [self.drone_icon, self.route_line]
 
-        # Проверка смены цели или первого шага этапа (новый этап)
         if not hasattr(self, "_last_energy_check_target") or not np.allclose(self._last_energy_check_target,
                                                                              self.target_pos, atol=1e-3):
             self._last_energy_check_target = self.target_pos.copy()
@@ -1575,7 +1597,6 @@ class Simulation:
             self._start_pos_of_leg = self.drone_pos.copy()
             self._energy_start_of_leg = self.remaining_capacity_watt_hours
 
-        # Определяем высоту для цели (если это станция — высота станции, иначе — рабочая высота дрона)
         end_height = self.drone_height
         is_station = False
         for i, station in enumerate(self.stations):
@@ -1590,14 +1611,12 @@ class Simulation:
         )
         available_energy = self._energy_start_of_leg
 
-        # Только один раз выводим лог для нового участка!
         if not getattr(self, "energy_checked_for_current_leg", False):
             self.update_log(
                 f"Проверка энергии: требуется до текущей цели {energy_to_target:.2f} Вт·ч, доступно: {available_energy:.2f} Вт·ч."
             )
             self.energy_checked_for_current_leg = True
 
-        # Если не хватает заряда — сразу аварийная логика
         if energy_to_target > available_energy:
             self.update_log("Недостаточно заряда для полета до текущей цели, поиск станции для зарядки.")
             self.is_forced_landing = False
@@ -1616,21 +1635,25 @@ class Simulation:
 
         if distance_step >= distance_to_target or distance_to_target < 1e-3:
             self.drone_pos = self.target_pos.copy()
-            # Списываем энергию только ОДИН раз за этап!
             self.remaining_capacity_watt_hours = max(0.0, self._energy_start_of_leg - energy_to_target)
             self.update_log(f"После этапа: остаток заряда = {self.remaining_capacity_watt_hours:.2f} Вт·ч")
 
-            # Сброс для следующего этапа
+            # --- добавляем точку в путь, если новая ---
+            if not self.drone_path or not np.allclose(self.drone_path[-1], self.drone_pos, atol=1e-5):
+                self.drone_path.append(self.drone_pos.copy())
+
             self.energy_checked_for_current_leg = False
             self.handle_arrival()
         else:
-            # --- Плавное движение и расход энергии ---
             direction_normalized = direction / np.linalg.norm(direction)
             step_vector = direction_normalized * (distance_step / self.cell_size)
             prev_pos = self.drone_pos.copy()
             self.drone_pos += step_vector
 
-            # Энергия за текущий шаг
+            # --- добавляем точку в путь после движения ---
+            if not self.drone_path or not np.allclose(self.drone_path[-1], self.drone_pos, atol=1e-5):
+                self.drone_path.append(self.drone_pos.copy())
+
             step_energy = self.calculate_energy_consumption(
                 prev_pos, self.drone_pos, self.drone_height, self.drone_height
             )
@@ -1735,10 +1758,6 @@ class Simulation:
             self.mission_started = True
             self.is_landing = False
 
-            self.route_line.set_data(
-                [self.drone_pos[0], self.target_pos[0]],
-                [self.drone_pos[1], self.target_pos[1]]
-            )
             self.route_line.set_linestyle('--')
             self.route_line.set_color('b')
 
@@ -1979,11 +1998,6 @@ class Simulation:
             else:
                 self.update_log(
                     f"⚠ Нейросеть выбрала станцию {neural_choice + 1}, но резервный метод предпочел станцию {best_station + 1}.")
-
-            self.route_line.set_data(
-                [self.drone_pos[0], self.target_pos[0]],
-                [self.drone_pos[1], self.target_pos[1]]
-            )
             self.is_forced_landing = True
             self.stop_after_forced_landing = True  # <-- КЛЮЧ: миссия остановится на станции после зарядки
 
@@ -2023,10 +2037,6 @@ class Simulation:
             self.update_log(f"Станция выбрана по минимальным энергозатратам: {best_station + 1}")
 
             self.target_pos = np.array(self.stations[best_station])
-            self.route_line.set_data(
-                [self.drone_pos[0], self.target_pos[0]],
-                [self.drone_pos[1], self.target_pos[1]]
-            )
             self.is_forced_landing = True
             return True
 
@@ -2035,7 +2045,7 @@ class Simulation:
             return False
 
     def charge_at_station(self, station_idx: int):
-        """Реалистичная зарядка дрона на док-станции с учетом фаз CC и CV."""
+        """Реалистичная зарядка дрона на док-станции с учетом фаз CC и CV и обновлением мини-графика."""
         if self.is_charging:
             self.update_log("Зарядка уже активна. Повторная зарядка невозможна.")
             return
@@ -2119,6 +2129,10 @@ class Simulation:
                 f"Мощность: {power:.2f} Вт, Ток: {current:.2f} А, Напряжение: {voltage:.2f} В."
             )
             self.update_ui()
+
+            # --- ОБНОВЛЕНИЕ мини-графика зарядки ---
+            if hasattr(self, "plot_charge_graph"):
+                self.plot_charge_graph(for_mini=True)
 
             if self.charge >= 0.9999:
                 self.complete_charge()
@@ -2256,24 +2270,28 @@ class Simulation:
 
         # --- Если заряда достаточно, продолжаем миссию ---
         self.mission_active = True
-        self.route_line.set_data(
-            [self.drone_pos[0], self.target_pos[0]],
-            [self.drone_pos[1], self.target_pos[1]]
-        )
         self.start_animation()
-
 
     def complete_simulation(self):
         """Завершение симуляции и остановка таймера."""
-        # Проверяем: если есть маршрут route_points, то завершаем по последней точке маршрута
-        mission_done = False
-        if hasattr(self, "route_points") and isinstance(self.route_points, list) and len(self.route_points) > 0:
-            last_point = self.route_points[-1]
-            if np.linalg.norm(self.drone_pos - last_point) < 0.1:
-                mission_done = True
-        # Иначе - по старой логике (end_pos)
-        elif self.end_pos is not None and np.linalg.norm(self.drone_pos - self.end_pos) < 0.1:
-            mission_done = True
+
+        # 1. Получаем позицию "домой" (стартовая точка) и "конечной" точки
+        at_start = self.start_pos is not None and np.linalg.norm(self.drone_pos - self.start_pos) < 0.1
+        at_end = self.end_pos is not None and np.linalg.norm(self.drone_pos - self.end_pos) < 0.1
+
+        # 2. Проверяем последний маршрут (если есть)
+        at_route_last = (
+                hasattr(self, "route_points")
+                and isinstance(self.route_points, list)
+                and len(self.route_points) > 0
+                and np.linalg.norm(self.drone_pos - self.route_points[-1]) < 0.1
+        )
+
+        # 3. Миссия завершена, если:
+        #   - Дрон вернулся на старт (для туда-обратно)
+        #   - Или достиг конечной точки (если только туда)
+        #   - Или совпал с последней точкой маршрута
+        mission_done = at_start or at_end or at_route_last
 
         if mission_done:
             self.mission_active = False
@@ -2301,9 +2319,6 @@ if __name__ == "__main__":
 внешние параметры соответствуют полетным, начать полетное задание, сброс симуляции, отчет о полете (лог движения), симуляционное поле сделать левее
 а легенду карты справа от симуляциионного поля, старт стоп возле точек начала и конца симуляции, кнопка, сделать маленький график на симуляциоонном поле, графики вызываются по кнопке, сделать легенду на графике ниже
 скорость симуляции убрать во вкладку начальных параметров
+Кнопки Вкладок не делать жирными и сделать контура когда нажимаешь, сделать кнопки с контурами.
+В параметры дрона добавить скорость дрона, чтобы было видно 15 мс и 2.5 мс
 """
-
-
-
-
-
