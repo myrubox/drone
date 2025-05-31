@@ -1879,17 +1879,6 @@ class Simulation:
                             continue
                         if N + 1 not in route_idx[1:-1]:
                             continue
-                        # --- Новый фильтр: не допускаем двух одинаковых станций подряд! ---
-                        bad = False
-                        for i in range(1, len(route_idx)):
-                            idx_prev = route_idx[i - 1]
-                            idx_cur = route_idx[i]
-                            # Одинаковые станции подряд — пропускаем такой маршрут
-                            if 1 <= idx_prev <= N and 1 <= idx_cur <= N and idx_prev == idx_cur:
-                                bad = True
-                                break
-                        if bad:
-                            continue
                         candidate_routes.append(route_idx)
 
         valid_routes = []
@@ -1912,7 +1901,6 @@ class Simulation:
             total_energy = 0.0
             prev_height = self.drone_height  # Стартовая высота
 
-            last_station_idx = None
             for i in range(len(route_points) - 1):
                 a = route_points[i]
                 b = route_points[i + 1]
@@ -1920,14 +1908,6 @@ class Simulation:
                 idx_b = route_idx[i + 1]
                 ha = coord2height[tuple(np.round(a, 5))]
                 hb = coord2height[tuple(np.round(b, 5))]
-
-                # --- Новый фильтр: пропускаем второй заход подряд на одну и ту же станцию ---
-                if is_station(idx_a) and is_station(idx_b):
-                    if np.allclose(a, b, atol=1e-4):
-                        # Две одинаковые станции подряд - некорректно!
-                        feasible = False
-                        log += f"    ❌ Две одинаковые станции подряд не допускаются: {route_names[i]} → {route_names[i + 1]}\n"
-                        break
 
                 # Если сейчас на станции (и не на старте), моделируем подъём после зарядки
                 if is_station(idx_a):
@@ -2013,17 +1993,8 @@ class Simulation:
                 log += f"❌ Маршрут невозможен.\n"
             self.update_log(log)
 
-        # --- Пост-обработка: УДАЛЯЕМ подряд идущие одинаковые станции (по координате) ---
-        def points_equal(a, b):
-            return np.allclose(a, b, atol=1e-4)
-
         if best_route is not None:
             idxs, route_points, total_energy, summary_log = best_route
-            cleaned_points = [route_points[0]]
-            for pt in route_points[1:]:
-                if not points_equal(pt, cleaned_points[-1]):
-                    cleaned_points.append(pt)
-            route_points = cleaned_points
             self.update_log(
                 f"Выбран маршрут: {' → '.join(point_labels[i] for i in idxs)}\nСуммарная энергия: {total_energy:.2f} Вт·ч\n")
             return route_points
@@ -2350,6 +2321,8 @@ class Simulation:
         """
         Завершение зарядки, обновление графика и подъем на рабочую высоту.
         После зарядки дрон должен продолжить маршрут строго по route_points, НИКАКИХ вызовов handle_arrival!
+        Гарантируется переход к следующей уникальной точке маршрута (по координате и высоте).
+        Если анимация была остановлена — она будет перезапущена.
         """
         self.charge = 1.0
         self.remaining_capacity_watt_hours = self.BATTERY_CAPACITY_WATT_HOURS
@@ -2357,7 +2330,10 @@ class Simulation:
         self.is_charging = False
         self.is_forced_landing = False
 
+        # Обновление графика
         self.plot_charge_graph()
+
+        # Подъем на рабочую высоту
         self.target_height = float(self.entries['drone_height'].get())
         self.is_landing = True
         self.update_log(
@@ -2368,20 +2344,21 @@ class Simulation:
         def update_height():
             if not self.is_landing:
                 self.update_log("Подъем завершен. Состояние посадки отключено (is_landing=False).", level="info")
-                # --- ПРОПУСКАЕМ все подряд идущие точки маршрута, совпадающие по координате и высоте ---
+                # --- Пропуск подряд идущих точек маршрута с такими же координатами и высотой! ---
                 if hasattr(self, "route_points") and self.route_points and self.current_route_index is not None:
+                    # !!! ВАЖНО: НЕ увеличивать индекс дважды после зарядки !!!
+                    # После подъема переходим к следующей уникальной точке маршрута (по XY и высоте)
                     next_index = self.current_route_index
                     while next_index + 1 < len(self.route_points):
                         next_pt = self.route_points[next_index + 1]
-                        # Найти высоту следующей точки
                         next_height = self.target_height
                         for i, st in enumerate(self.stations):
                             if np.allclose(next_pt, st, atol=1e-2):
                                 next_height = self.station_heights[i]
                                 break
-                        # <<< Главное отличие: теперь пропускаем все точки, совпадающие и по координате, и по высоте
+                        # Пропустить только если совпадает и координата, и высота!
                         if np.allclose(self.drone_pos, next_pt, atol=1e-2) and abs(
-                                self.drone_height - next_height) < 1e-2:
+                                self.target_height - next_height) < 1e-2:
                             next_index += 1
                             continue
                         else:
@@ -2392,7 +2369,8 @@ class Simulation:
                         self.target_pos = self.route_points[self.current_route_index].copy()
                         self.update_log(f"После зарядки и подъёма: следующая цель по маршруту: {self.target_pos}")
                         self.mission_active = True
-                        self.last_charged_station_idx = None
+                        self.last_charged_station_idx = None  # <--- сбрасываем после подъема
+                        # --- ГАРАНТИЯ запуска анимации, если она была остановлена ---
                         if not hasattr(self, "animation") or self.animation is None or not getattr(self.animation,
                                                                                                    "event_source",
                                                                                                    None) or not getattr(
@@ -2423,7 +2401,7 @@ class Simulation:
                     f"Флаг is_landing={self.is_landing}. Продолжаем маршрут.",
                     level="info"
                 )
-                # --- ЕЩЁ РАЗ пропускаем все точки, совпадающие по координате и высоте ---
+                # Повтор логики перехода к следующей точке (с пропуском по координате и высоте)
                 if hasattr(self, "route_points") and self.route_points and self.current_route_index is not None:
                     next_index = self.current_route_index
                     while next_index + 1 < len(self.route_points):
@@ -2444,7 +2422,7 @@ class Simulation:
                         self.target_pos = self.route_points[self.current_route_index].copy()
                         self.update_log(f"После зарядки и подъёма: следующая цель по маршруту: {self.target_pos}")
                         self.mission_active = True
-                        self.last_charged_station_idx = None
+                        self.last_charged_station_idx = None  # <--- сбрасываем после подъема
                         if not hasattr(self, "animation") or self.animation is None or not getattr(self.animation,
                                                                                                    "event_source",
                                                                                                    None) or not getattr(
