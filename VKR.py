@@ -1840,34 +1840,27 @@ class Simulation:
         import numpy as np
         from itertools import permutations
 
+        WORK_HEIGHT = self.DEFAULT_WORKING_HEIGHT if hasattr(self, "DEFAULT_WORKING_HEIGHT") else self.drone_height
         stations = [np.array(s, dtype=float) for s in self.stations]
         station_names = [f"Док{idx + 1}" for idx in range(len(stations))]
         all_points = [start] + stations + [end]
         point_labels = ["Старт"] + station_names + ["Конец"]
+        N = len(stations)
 
-        coord2height = {tuple(np.round(start, 5)): self.drone_height}
-        for idx, s in enumerate(stations):
-            coord2height[tuple(np.round(s, 5))] = self.station_heights[idx]
-        coord2height[tuple(np.round(end, 5))] = self.drone_height
-
-        def list_station_indices():
-            return list(range(len(stations)))
-
-        def route_to_label(route):
-            return " → ".join(point_labels[i] for i in route)
+        def is_station(idx):
+            return 1 <= idx <= N
 
         dists = [np.linalg.norm(start - s) for s in stations]
         sorted_station_indices = np.argsort(dists).tolist()
 
         candidate_routes = []
-        N = len(stations)
         for n_tuda in range(0, N + 1):
             for n_obratno in range(0, N + 1):
-                for tuda_stops in permutations(list_station_indices(), n_tuda):
+                for tuda_stops in permutations(range(N), n_tuda):
                     if len(tuda_stops) > 1 and any(
                             tuda_stops[i] == tuda_stops[i + 1] for i in range(len(tuda_stops) - 1)):
                         continue
-                    for obratno_stops in permutations(list_station_indices(), n_obratno):
+                    for obratno_stops in permutations(range(N), n_obratno):
                         if len(obratno_stops) > 1 and any(
                                 obratno_stops[i] == obratno_stops[i + 1] for i in range(len(obratno_stops) - 1)):
                             continue
@@ -1881,126 +1874,120 @@ class Simulation:
                             continue
                         candidate_routes.append(route_idx)
 
-        valid_routes = []
         best_route = None
         best_energy = None
 
         def calc_energy(a, b, ha, hb):
             return self.calculate_energy_consumption(np.array(a), np.array(b), ha, hb)
 
-        def is_station(idx):
-            return 1 <= idx <= N
-
         for route_idx in candidate_routes:
-            route_points = [all_points[i] for i in route_idx]
-            route_names = [point_labels[i] for i in route_idx]
-            route_str = " → ".join(route_names)
-            log = f"Проверяем маршрут: {route_str}\n"
+            pts = []
+            hs = []
+            log = ""
             charge = self.BATTERY_CAPACITY_WATT_HOURS
             feasible = True
             total_energy = 0.0
-            prev_height = self.drone_height  # Стартовая высота
 
-            for i in range(len(route_points) - 1):
-                a = route_points[i]
-                b = route_points[i + 1]
-                idx_a = route_idx[i]
-                idx_b = route_idx[i + 1]
-                ha = coord2height[tuple(np.round(a, 5))]
-                hb = coord2height[tuple(np.round(b, 5))]
+            # Начало всегда на рабочей высоте
+            pts.append(list(all_points[route_idx[0]]))
+            hs.append(float(WORK_HEIGHT))
 
-                # Если сейчас на станции (и не на старте), моделируем подъём после зарядки
-                if is_station(idx_a):
-                    if ha != self.drone_height:
-                        climb = abs(self.drone_height - ha) * (
-                            self.CLIMB_ENERGY if self.drone_height > ha else self.DESCENT_ENERGY
-                        )
-                        climb_watt_hours = climb / 3600
-                        log += f"    Подъём с высоты станции {ha:.2f} м на рабочую высоту {self.drone_height:.2f} м: {climb_watt_hours:.2f} Вт·ч (осталось {charge:.2f})\n"
-                        if climb_watt_hours > charge + 1e-5:
-                            log += f"    ❌ Не хватает заряда на подъём после зарядки! Нужно {climb_watt_hours:.2f}, есть {charge:.2f}\n"
-                            feasible = False
-                            break
-                        charge -= climb_watt_hours
-                        total_energy += climb_watt_hours
-                    prev_height = self.drone_height
+            for i in range(1, len(route_idx)):
+                idx_cur = route_idx[i]
+                cur = list(all_points[idx_cur])  # всегда [x, y]
+                label_cur = point_labels[idx_cur]
+                if is_station(idx_cur):
+                    station_height = self.station_heights[idx_cur - 1]
+                    # Подлёт к станции на рабочей высоте (если ещё не на этих координатах/высоте)
+                    if not (np.allclose(pts[-1], cur, atol=1e-4) and abs(hs[-1] - WORK_HEIGHT) < 1e-2):
+                        e = calc_energy(pts[-1], cur, hs[-1], WORK_HEIGHT)
+                        total_energy += e
+                        charge -= e
+                        log += f"  {label_cur} (подлёт): {e:.2f} Вт·ч (осталось {charge:.2f})\n"
+                        pts.append(cur)
+                        hs.append(float(WORK_HEIGHT))
+                    # Спуск к станции (если не на высоте дока)
+                    if abs(hs[-1] - station_height) > 1e-2:
+                        e = abs(hs[-1] - station_height) * (
+                            self.CLIMB_ENERGY if station_height > hs[-1] else self.DESCENT_ENERGY
+                        ) / 3600
+                        total_energy += e
+                        charge -= e
+                        log += f"    Спуск на высоту станции {label_cur} ({station_height:.2f} м): {e:.2f} Вт·ч (осталось {charge:.2f})\n"
+                        pts.append(cur)
+                        hs.append(float(station_height))
+                    # Зарядка (просто лог)
+                    log += f"    ↺ Зарядка на {label_cur} (заряд до {self.BATTERY_CAPACITY_WATT_HOURS:.2f})\n"
+                    charge = self.BATTERY_CAPACITY_WATT_HOURS
+                    # Подъём на рабочую высоту (если не на ней)
+                    if abs(hs[-1] - WORK_HEIGHT) > 1e-2:
+                        e = abs(hs[-1] - WORK_HEIGHT) * (
+                            self.CLIMB_ENERGY if WORK_HEIGHT > hs[-1] else self.DESCENT_ENERGY
+                        ) / 3600
+                        total_energy += e
+                        charge -= e
+                        log += f"    Подъём с высоты станции {label_cur} ({hs[-1]:.2f} м) на рабочую высоту {WORK_HEIGHT:.2f} м: {e:.2f} Вт·ч (осталось {charge:.2f})\n"
+                        pts.append(cur)
+                        hs.append(float(WORK_HEIGHT))
                 else:
-                    prev_height = ha
-
-                # Горизонтальный участок — всегда между рабочими высотами
-                e = calc_energy(a, b, self.drone_height, self.drone_height)
-                log += f"  {route_names[i]} → {route_names[i + 1]}: {e:.2f} Вт·ч (осталось {charge:.2f})\n"
-                if e > charge + 1e-5:
-                    log += f"    ❌ Не хватает заряда! Нужно {e:.2f}, есть {charge:.2f}\n"
+                    # Проходная точка (старт, конец) — всегда на рабочей высоте
+                    if not (np.allclose(pts[-1], cur, atol=1e-4) and abs(hs[-1] - WORK_HEIGHT) < 1e-2):
+                        e = calc_energy(pts[-1], cur, hs[-1], WORK_HEIGHT)
+                        total_energy += e
+                        charge -= e
+                        log += f"  {label_cur}: {e:.2f} Вт·ч (осталось {charge:.2f})\n"
+                        pts.append(cur)
+                        hs.append(float(WORK_HEIGHT))
+                # Проверка на невозможность участка
+                if charge < -1e-5:
+                    log += f"    ❌ Не хватает заряда! Осталось {charge:.2f} Вт·ч\n"
                     feasible = False
                     break
-                charge -= e
-                total_energy += e
 
-                # Если следующая точка — станция, моделируем спуск перед зарядкой
-                if is_station(idx_b):
-                    if self.drone_height != hb:
-                        descend = abs(self.drone_height - hb) * (
-                            self.CLIMB_ENERGY if self.drone_height < hb else self.DESCENT_ENERGY
-                        )
-                        descend_watt_hours = descend / 3600
-                        log += f"    Спуск на высоту станции {hb:.2f} м: {descend_watt_hours:.2f} Вт·ч (осталось {charge:.2f})\n"
-                        if descend_watt_hours > charge + 1e-5:
-                            log += f"    ❌ Не хватает заряда на спуск к станции! Нужно {descend_watt_hours:.2f}, есть {charge:.2f}\n"
-                            feasible = False
-                            break
-                        charge -= descend_watt_hours
-                        total_energy += descend_watt_hours
-                    log += f"    ↺ Зарядка на {route_names[i + 1]} (заряд до {self.BATTERY_CAPACITY_WATT_HOURS:.2f})\n"
-                    charge = self.BATTERY_CAPACITY_WATT_HOURS
-                    prev_height = hb
+            # Удалить подряд одинаковые точки (координата+высота)
+            cleaned_pts = [pts[0]]
+            cleaned_hs = [hs[0]]
+            for p, h in zip(pts[1:], hs[1:]):
+                if not (np.allclose(p, cleaned_pts[-1], atol=1e-4) and abs(h - cleaned_hs[-1]) < 1e-2):
+                    cleaned_pts.append(p)
+                    cleaned_hs.append(h)
 
-            # Критическая проверка: после конечной точки хватит ли заряда до следующей точки (учитывая подъём/спуск)
-            idx_K = route_idx.index(N + 1)
-            if feasible and idx_K < len(route_idx) - 2:
-                # После Конца идёт ещё движение (обратно)
-                next_pt = route_idx[idx_K + 1]
-                next_label = point_labels[next_pt]
-                a = route_points[idx_K]
-                b = route_points[idx_K + 1]
-                ha = coord2height[tuple(np.round(a, 5))]
-                hb = coord2height[tuple(np.round(b, 5))]
-                # Перед стартом участка нужен подъём, если конец не на рабочей высоте
-                if ha != self.drone_height:
-                    climb = abs(self.drone_height - ha) * (
-                        self.CLIMB_ENERGY if self.drone_height > ha else self.DESCENT_ENERGY
-                    )
-                    climb_watt_hours = climb / 3600
-                    log += f"    Подъём после Конца с высоты {ha:.2f} м на рабочую высоту {self.drone_height:.2f} м: {climb_watt_hours:.2f} Вт·ч (осталось {charge:.2f})\n"
-                    if climb_watt_hours > charge + 1e-5:
-                        log += f"    ❌ После конечной точки не хватает заряда на подъём! Нужно {climb_watt_hours:.2f}, есть {charge:.2f}\n"
-                        feasible = False
-                # Горизонтальный участок
-                if feasible:
-                    e = calc_energy(a, b, self.drone_height, self.drone_height)
-                    log += f"    После Конца: {point_labels[route_idx[idx_K]]} → {next_label}: {e:.2f} Вт·ч (осталось {charge:.2f})\n"
-                    if e > (charge - climb_watt_hours) + 1e-5:
-                        log += f"    ❌ После конечной точки не хватает заряда на участок {next_label}: нужно {e:.2f}, есть {charge - climb_watt_hours:.2f}\n"
-                        feasible = False
+            # Проверка согласованности типов для debug
+            for j, pt in enumerate(cleaned_pts):
+                arr = np.array(pt)
+                assert arr.shape == (2,), f"Bad route point shape at step {j}: {arr.shape} {pt}"
+            for j, h in enumerate(cleaned_hs):
+                assert isinstance(h, (float, int, np.floating, np.integer)), f"Bad height at step {j}: {type(h)} {h}"
 
             if feasible:
                 log += f"✅ Маршрут выполним! Суммарная энергия: {total_energy:.2f} Вт·ч\n"
-                valid_routes.append((route_idx, route_names, total_energy, log))
                 if best_energy is None or total_energy < best_energy:
                     best_energy = total_energy
-                    best_route = (route_idx, route_points, total_energy, log)
+                    best_route = (cleaned_pts, cleaned_hs, total_energy, log)
             else:
                 log += f"❌ Маршрут невозможен.\n"
             self.update_log(log)
 
         if best_route is not None:
-            idxs, route_points, total_energy, summary_log = best_route
+            route_points, route_heights, total_energy, summary_log = best_route
+            self.route_points = route_points
+            self.route_heights = route_heights
+
+            def find_label(point):
+                for i, ap in enumerate(all_points):
+                    if np.allclose(point, ap, atol=1e-4):
+                        return point_labels[i]
+                return "???"
+
             self.update_log(
-                f"Выбран маршрут: {' → '.join(point_labels[i] for i in idxs)}\nСуммарная энергия: {total_energy:.2f} Вт·ч\n")
-            return route_points
+                "Выбран маршрут: " +
+                " → ".join([f"{find_label(p)} {tuple(p)} ({h:.0f})" for p, h in zip(route_points, route_heights)]) +
+                f"\nСуммарная энергия: {total_energy:.2f} Вт·ч\n"
+            )
+            return route_points, route_heights
         else:
             self.update_log("❌ Не найден ни один выполнимый маршрут даже с учётом подзарядок (перебор всех сценариев).")
-            return None
+            return None, None
 
     def total_route_energy(self, route_points, heights=None):
         """Считает суммарную энергию по всему маршруту."""
