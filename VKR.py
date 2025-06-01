@@ -1898,53 +1898,52 @@ class Simulation:
                 label_cur = point_labels[idx_cur]
                 if is_station(idx_cur):
                     station_height = self.station_heights[idx_cur - 1]
-                    # Подлёт к станции на рабочей высоте (если ещё не на этих координатах/высоте)
+                    # Подлёт на рабочей высоте
                     if not (np.allclose(pts[-1], cur, atol=1e-4) and abs(hs[-1] - WORK_HEIGHT) < 1e-2):
                         e = calc_energy(pts[-1], cur, hs[-1], WORK_HEIGHT)
                         total_energy += e
                         charge -= e
-                        log += f"  {label_cur} (подлёт): {e:.2f} Вт·ч (осталось {charge:.2f})\n"
+                        log += f"  {label_cur} ({tuple(cur)}) (подлёт): {e:.2f} Вт·ч (осталось {charge:.2f})\n"
                         pts.append(cur)
                         hs.append(float(WORK_HEIGHT))
-                    # Спуск к станции (если не на высоте дока)
+                    # Спуск к станции
                     if abs(hs[-1] - station_height) > 1e-2:
                         e = abs(hs[-1] - station_height) * (
                             self.CLIMB_ENERGY if station_height > hs[-1] else self.DESCENT_ENERGY
                         ) / 3600
                         total_energy += e
                         charge -= e
-                        log += f"    Спуск на высоту станции {label_cur} ({station_height:.2f} м): {e:.2f} Вт·ч (осталось {charge:.2f})\n"
+                        log += f"    Спуск на высоту станции {label_cur} ({tuple(cur)}) ({station_height:.2f} м): {e:.2f} Вт·ч (осталось {charge:.2f})\n"
                         pts.append(cur)
                         hs.append(float(station_height))
-                    # Зарядка (просто лог)
+                    # Зарядка (логически фиксируем заряд)
                     log += f"    ↺ Зарядка на {label_cur} (заряд до {self.BATTERY_CAPACITY_WATT_HOURS:.2f})\n"
                     charge = self.BATTERY_CAPACITY_WATT_HOURS
-                    # Подъём на рабочую высоту (если не на ней)
+                    # Подъём на рабочую высоту
                     if abs(hs[-1] - WORK_HEIGHT) > 1e-2:
                         e = abs(hs[-1] - WORK_HEIGHT) * (
                             self.CLIMB_ENERGY if WORK_HEIGHT > hs[-1] else self.DESCENT_ENERGY
                         ) / 3600
                         total_energy += e
                         charge -= e
-                        log += f"    Подъём с высоты станции {label_cur} ({hs[-1]:.2f} м) на рабочую высоту {WORK_HEIGHT:.2f} м: {e:.2f} Вт·ч (осталось {charge:.2f})\n"
+                        log += f"    Подъём с высоты станции {label_cur} ({tuple(cur)}) ({hs[-1]:.2f} м) на рабочую высоту {WORK_HEIGHT:.2f} м: {e:.2f} Вт·ч (осталось {charge:.2f})\n"
                         pts.append(cur)
                         hs.append(float(WORK_HEIGHT))
                 else:
-                    # Проходная точка (старт, конец) — всегда на рабочей высоте
+                    # Старт/Конец: всегда на рабочей высоте
                     if not (np.allclose(pts[-1], cur, atol=1e-4) and abs(hs[-1] - WORK_HEIGHT) < 1e-2):
                         e = calc_energy(pts[-1], cur, hs[-1], WORK_HEIGHT)
                         total_energy += e
                         charge -= e
-                        log += f"  {label_cur}: {e:.2f} Вт·ч (осталось {charge:.2f})\n"
+                        log += f"  {label_cur} ({tuple(cur)}): {e:.2f} Вт·ч (осталось {charge:.2f})\n"
                         pts.append(cur)
                         hs.append(float(WORK_HEIGHT))
-                # Проверка на невозможность участка
                 if charge < -1e-5:
                     log += f"    ❌ Не хватает заряда! Осталось {charge:.2f} Вт·ч\n"
                     feasible = False
                     break
 
-            # Удалить подряд одинаковые точки (координата+высота)
+            # Удалить подряд одинаковые точки
             cleaned_pts = [pts[0]]
             cleaned_hs = [hs[0]]
             for p, h in zip(pts[1:], hs[1:]):
