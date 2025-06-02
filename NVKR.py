@@ -1460,7 +1460,11 @@ class Simulation:
         STATION_RADIUS = 0.5
         for i, station in enumerate(self.stations):
             if np.linalg.norm(self.drone_pos - np.array(station)) < STATION_RADIUS:
-                # ... посадка как раньше ...
+                # Зафиксировать положение дрона на станции (точно)
+                self.drone_pos = np.array(station)
+                self.motion_controller.set_position(np.array(station) * self.cell_size)
+                self.motion_controller.set_velocity([0, 0])
+                # Если НЕ на высоте станции — посадка
                 if abs(self.drone_height - self.station_heights[i]) > 1e-2:
                     self.is_landing = True
                     self.target_height = self.station_heights[i]
@@ -1478,18 +1482,7 @@ class Simulation:
                     self.charge_at_station(i)
                     return
 
-        # --- Если достигли точки маршрута, которая не станция, но дальше по плану должна быть станция ---
-        # Например, сейчас достигли точки "Конец", а следующий пункт — док-станция
-        if (self.current_route_index + 1 < len(self.route_points)):
-            next_point = self.route_points[self.current_route_index + 1]
-            for idx, st in enumerate(self.stations):
-                if np.allclose(next_point, st, atol=1e-2):
-                    self.update_log("Переход к следующей точке маршрута: требуется выбор станции нейросетью.")
-                    # --- Вызвать force_decision, чтобы нейросеть выбрала станцию для посадки ---
-                    self.force_decision_and_go()
-                    return
-
-        # --- Остальная логика перехода по маршруту ---
+        # --- Дальше: переход к следующей точке маршрута (строго по route_points) ---
         if self.current_route_index + 1 < len(self.route_points):
             self.current_route_index += 1
             self.target_pos = self.route_points[self.current_route_index].copy()
@@ -2115,70 +2108,6 @@ class Simulation:
             self.update_log("Энергии достаточно для перехода к следующей точке маршрута.")
             return True
 
-    def force_decision_and_go(self):
-        """
-        Вызывает нейросетевой выбор док-станции для посадки и инициирует полет к ней, посадку и зарядку.
-        """
-        try:
-            # Считаем текущую станцию занятой, если только что с нее вылетели (чтобы нейросеть не выбрала ту же)
-            blocklist = set()
-            if hasattr(self, "last_charged_station_idx"):
-                blocklist.add(self.last_charged_station_idx)
-
-            # Формируем признаки для нейросети с учетом блоклиста
-            battery_capacity = self.BATTERY_CAPACITY_WATT_HOURS
-            charge_watt_hours = self.remaining_capacity_watt_hours
-            height = self.drone_height
-            station_data = []
-            for i in range(2):
-                x, y = self.stations[i]
-                dx = (self.drone_pos[0] - x) * self.cell_size
-                dy = (self.drone_pos[1] - y) * self.cell_size
-                dist = np.sqrt(dx ** 2 + dy ** 2)
-                # Важно: если станция в blocklist — статус для нейросети "занята"
-                status = 1.0 if (self.station_statuses[i] or i in blocklist) else 0.0
-                st_height = self.station_heights[i]
-                station_data.append({'dist': dist, 'status': status, 'height': st_height})
-            X = get_nn_features(charge_watt_hours, battery_capacity, height, station_data).reshape(1, -1)
-
-            neural_output = self.nn.forward(X)[0]
-            neural_choice = np.argmax(neural_output)
-            neural_confidence = neural_output[neural_choice]
-
-            self.update_log(f"Нейросеть выбрала станцию {neural_choice + 1} с уверенностью {neural_confidence:.2f}")
-
-            confidence_threshold = 0.5
-            if neural_confidence < confidence_threshold:
-                self.update_log(
-                    f"⚠ Уверенность нейросети ({neural_confidence:.2f}) ниже порога ({confidence_threshold}). Активируется резервный режим.")
-                if self.activate_reserve_mode():
-                    self.update_log("Резервный режим успешно завершил выбор станции.")
-                    return
-                self.update_log("Резервный режим не смог выбрать станцию. Полет продолжается.")
-                return
-
-            # Перенаправить дрона на станцию, выбранную нейросетью, запустить посадку и зарядку
-            self.update_log(f"Полет к выбранной нейросетью станции {neural_choice + 1} для посадки и зарядки.")
-            self.target_pos = np.array(self.stations[neural_choice])
-            self.mission_active = True
-
-            # Запустить движение к выбранной станции
-            # Если уже на станции — сразу посадка, иначе — полет к станции
-            if np.allclose(self.drone_pos, self.stations[neural_choice], atol=1e-2):
-                self.is_landing = True
-                self.target_height = self.station_heights[neural_choice]
-                from matplotlib.animation import FuncAnimation
-                self.animation = FuncAnimation(
-                    self.fig_map, self.perform_landing,
-                    frames=None, interval=50, blit=False, repeat=False, cache_frame_data=False
-                )
-            else:
-                # Перезапускаем анимацию, чтобы полететь к новой цели
-                self.start_animation()
-
-        except Exception as e:
-            self.update_log(f"Ошибка в force_decision_and_go: {str(e)}")
-
     def force_decision(self) -> bool:
         """Принудительная посадка на док-станцию, выбранную нейросетью, после зарядки продолжить миссию."""
         try:
@@ -2260,10 +2189,7 @@ class Simulation:
             return False
 
     def charge_at_station(self, station_idx: int):
-        """
-        Реалистичная зарядка дрона на док-станции с учетом фаз CC и CV и обновлением мини-графика.
-        Теперь — с поддержкой нейросетевого выбора следующей станции для посадки, если в маршруте есть подряд идущие док-станции.
-        """
+        """Реалистичная зарядка дрона на док-станции с учетом фаз CC и CV и обновлением мини-графика."""
         # Защита от повторной зарядки на той же станции подряд
         if hasattr(self, "last_charged_station_idx") and self.last_charged_station_idx == station_idx:
             self.update_log(
@@ -2296,11 +2222,10 @@ class Simulation:
         }
         # --------------------------------------------
 
-        # Перед зарядкой — пометить эту станцию как "занятую для нейросети"
-        if not hasattr(self, "nn_station_blocklist"):
-            self.nn_station_blocklist = set()
-        self.nn_station_blocklist.add(station_idx)
-        self.update_log(f"Станция {station_idx + 1} временно считается занятой для нейросети.")
+        # Расчет параметров зарядки
+        max_power = self.CHARGING_VOLTAGE * self.CHARGING_CURRENT  # 480 Вт (пример)
+        cv_voltage = 42  # Фиксированное напряжение для CV-фазы
+        efficiency = self.CHARGING_EFFICIENCY
 
         self.is_charging = True
         self._last_elapsed_time = 0
@@ -2308,7 +2233,7 @@ class Simulation:
         start_time = time.time()
 
         def update_charge():
-            nonlocal start_time
+            nonlocal max_power, cv_voltage
 
             elapsed_time_real = time.time() - start_time
             elapsed_time_sim = elapsed_time_real * self.simulation_speed_multiplier
@@ -2337,7 +2262,7 @@ class Simulation:
                 self.complete_charge()
                 return
 
-            charge_increment = (power * self.CHARGING_EFFICIENCY * time_step) / 3600
+            charge_increment = (power * efficiency * time_step) / 3600
             charge_increment = min(charge_increment,
                                    self.BATTERY_CAPACITY_WATT_HOURS - self.remaining_capacity_watt_hours)
 
@@ -2405,14 +2330,10 @@ class Simulation:
         self.is_charging = False
         self.is_forced_landing = False
 
-        # --- Сброс "занятости" станции ---
-        if hasattr(self, "last_charged_station_idx") and hasattr(self, "nn_station_blocklist"):
-            if self.last_charged_station_idx in self.nn_station_blocklist:
-                self.nn_station_blocklist.remove(self.last_charged_station_idx)
-                self.update_log(f"Станция {self.last_charged_station_idx + 1} теперь снова доступна для нейросети.")
-
-        # обновление графика и продолжение маршрута как обычно
+        # Обновление графика
         self.plot_charge_graph()
+
+        # Подъем на рабочую высоту
         self.target_height = float(self.entries['drone_height'].get())
         self.is_landing = True
         self.update_log(
