@@ -1615,13 +1615,15 @@ class Simulation:
             self.mission_active = False
             return [self.drone_icon, self.route_line]
 
+        # --- ВСЕГДА движение по маршруту только на рабочей высоте! ---
+        self.target_height = float(self.entries['drone_height'].get())
+
         # --- 3. Перевод координат в метры для контроллера движения ---
         current_pos_m = np.array(self.drone_pos, dtype=float) * self.cell_size
         target_pos_m = np.array(self.target_pos, dtype=float) * self.cell_size
 
         # --- 4. Инициализация нового этапа движения, если цель изменилась ---
         last_target = getattr(self, "_last_energy_check_target", None)
-        # Гарантируем, что last_target и self.target_pos — np.ndarray, иначе корректно сравниваем
         need_new_leg = False
         if last_target is None:
             need_new_leg = True
@@ -1642,17 +1644,12 @@ class Simulation:
             # Оставляем текущую скорость (для плавного разгона/торможения)
 
         # --- 5. Проверка энергии на весь этап ---
-        end_height = self.drone_height
-        is_station = False
-        for i, station in enumerate(self.stations):
-            if np.allclose(self.target_pos, self.stations[i], atol=1e-2):
-                end_height = self.station_heights[i]
-                is_station = True
-                break
+        # Теперь всегда считаем, что летим на рабочей высоте!
+        end_height = float(self.entries['drone_height'].get())
 
         energy_to_target = self.calculate_energy_consumption(
             self._start_pos_of_leg, self.target_pos,
-            self.drone_height, end_height if is_station else self.drone_height
+            self.drone_height, end_height
         )
         available_energy = self._energy_start_of_leg
 
@@ -1697,6 +1694,7 @@ class Simulation:
 
         # --- 13. Расход энергии за этот шаг (по реальному перемещению) ---
         prev_pos_grid = prev_pos_m / self.cell_size
+        # ВСЕГДА считаем расход на рабочей высоте!
         step_energy = self.calculate_energy_consumption(
             prev_pos_grid, self.drone_pos, self.drone_height, self.drone_height
         )
@@ -2321,7 +2319,7 @@ class Simulation:
         """
         Завершение зарядки, обновление графика и подъем на рабочую высоту.
         После зарядки дрон должен продолжить маршрут строго по route_points, НИКАКИХ вызовов handle_arrival!
-        Гарантируется переход к следующей уникальной точке маршрута (по координате и высоте).
+        Гарантируется переход к следующей уникальной точке маршрута (по координате).
         Если анимация была остановлена — она будет перезапущена.
         """
         self.charge = 1.0
@@ -2333,8 +2331,8 @@ class Simulation:
         # Обновление графика
         self.plot_charge_graph()
 
-        # Подъем на рабочую высоту
-        self.target_height = float(self.entries['drone_height'].get())
+        # Подъем на рабочую высоту (строго после зарядки — всегда)
+        self.target_height = float(self.entries['drone_height'].get())  # рабочая высота!
         self.is_landing = True
         self.update_log(
             f"Дрон возвращается на рабочую высоту: {self.target_height:.2f} м. is_landing={self.is_landing}.",
@@ -2342,23 +2340,31 @@ class Simulation:
         )
 
         def update_height():
-            if not self.is_landing:
-                self.update_log("Подъем завершен. Состояние посадки отключено (is_landing=False).", level="info")
-                # --- Пропуск подряд идущих точек маршрута с такими же координатами и высотой! ---
+            current_time = time.time()
+            elapsed_time_real = current_time - self.last_update_time
+            self.last_update_time = current_time
+
+            sim_delta_time = elapsed_time_real * self.simulation_speed_multiplier
+            height_change = self.vertical_speed * sim_delta_time
+            height_difference = self.target_height - self.drone_height
+
+            # --- Проверяем, достигли ли рабочей высоты ---
+            if abs(height_difference) <= abs(height_change):
+                self.drone_height = self.target_height
+                self.consume_energy(height_change=height_difference)
+                self.is_landing = False
+                self.update_log(
+                    f"Дрон достиг рабочей высоты: {self.target_height:.2f} м. "
+                    f"Флаг is_landing={self.is_landing}. Продолжаем маршрут.",
+                    level="info"
+                )
+                # --- Переход к следующей уникальной точке маршрута (только по координате!) ---
                 if hasattr(self, "route_points") and self.route_points and self.current_route_index is not None:
-                    # !!! ВАЖНО: НЕ увеличивать индекс дважды после зарядки !!!
-                    # После подъема переходим к следующей уникальной точке маршрута (по XY и высоте)
                     next_index = self.current_route_index
                     while next_index + 1 < len(self.route_points):
                         next_pt = self.route_points[next_index + 1]
-                        next_height = self.target_height
-                        for i, st in enumerate(self.stations):
-                            if np.allclose(next_pt, st, atol=1e-2):
-                                next_height = self.station_heights[i]
-                                break
-                        # Пропустить только если совпадает и координата, и высота!
-                        if np.allclose(self.drone_pos, next_pt, atol=1e-2) and abs(
-                                self.target_height - next_height) < 1e-2:
+                        # Пропустить только если совпадает КООРДИНАТА (НЕ высота!)
+                        if np.allclose(self.drone_pos, next_pt, atol=1e-2):
                             next_index += 1
                             continue
                         else:
@@ -2384,58 +2390,7 @@ class Simulation:
                     self.complete_simulation()
                 return
 
-            current_time = time.time()
-            elapsed_time_real = current_time - self.last_update_time
-            self.last_update_time = current_time
-
-            sim_delta_time = elapsed_time_real * self.simulation_speed_multiplier
-            height_change = self.vertical_speed * sim_delta_time
-            height_difference = self.target_height - self.drone_height
-
-            if abs(height_difference) <= abs(height_change):
-                self.drone_height = self.target_height
-                self.consume_energy(height_change=height_difference)
-                self.is_landing = False
-                self.update_log(
-                    f"Дрон достиг рабочей высоты: {self.target_height:.2f} м. "
-                    f"Флаг is_landing={self.is_landing}. Продолжаем маршрут.",
-                    level="info"
-                )
-                # Повтор логики перехода к следующей точке (с пропуском по координате и высоте)
-                if hasattr(self, "route_points") and self.route_points and self.current_route_index is not None:
-                    next_index = self.current_route_index
-                    while next_index + 1 < len(self.route_points):
-                        next_pt = self.route_points[next_index + 1]
-                        next_height = self.target_height
-                        for i, st in enumerate(self.stations):
-                            if np.allclose(next_pt, st, atol=1e-2):
-                                next_height = self.station_heights[i]
-                                break
-                        if np.allclose(self.drone_pos, next_pt, atol=1e-2) and abs(
-                                self.target_height - next_height) < 1e-2:
-                            next_index += 1
-                            continue
-                        else:
-                            break
-                    if next_index + 1 < len(self.route_points):
-                        self.current_route_index = next_index + 1
-                        self.target_pos = self.route_points[self.current_route_index].copy()
-                        self.update_log(f"После зарядки и подъёма: следующая цель по маршруту: {self.target_pos}")
-                        self.mission_active = True
-                        self.last_charged_station_idx = None  # <--- сбрасываем после подъема
-                        if not hasattr(self, "animation") or self.animation is None or not getattr(self.animation,
-                                                                                                   "event_source",
-                                                                                                   None) or not getattr(
-                            self.animation.event_source, "_job", None):
-                            self.start_animation()
-                    else:
-                        self.update_log("Все точки маршрута пройдены после зарядки. Миссия завершена.")
-                        self.complete_simulation()
-                else:
-                    self.update_log("Ошибка: нет актуального маршрута после зарядки!")
-                    self.complete_simulation()
-                return
-
+            # --- Если еще не достигли — продолжаем подъем ---
             self.drone_height += height_change if height_difference > 0 else -height_change
             self.consume_energy(height_change=height_change)
             self.update_ui()
