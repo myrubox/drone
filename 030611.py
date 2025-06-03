@@ -1378,8 +1378,12 @@ class Simulation:
             self._mission_log_landing_counter = 0
         LANDING_MISSION_LOG_EVERY = 10
 
-        if abs(target_height - self.drone_height) < 1e-2 and curr_speed < 0.05:
-            self.drone_height = target_height
+        # === ПОПРАВКА: увеличим допуски сравнения, чтобы не было "промахов" ===
+        POSITION_ATOL = 0.05  # 5 см
+        HEIGHT_ATOL = 0.2  # 20 см
+
+        if abs(target_height - self.drone_height) < HEIGHT_ATOL and curr_speed < 0.05:
+            self.drone_height = target_height  # Жёстко прилипнуть
             self.is_landing = False
             self.update_log(f"Посадка/подъем завершены на высоте: {self.drone_height:.2f} м.")
             self.update_mission_log(self.drone_pos[0], self.drone_pos[1], self.drone_height, force=True)
@@ -1401,15 +1405,18 @@ class Simulation:
         self.update_ui()
 
         # После завершения посадки/подъёма
-        if not self.is_landing and abs(self.drone_height - self.target_height) < 1e-2:
-            # Проверяем — дрон на станции?
-            for idx, height in enumerate(self.station_heights):
-                if abs(self.drone_height - height) < 1e-2 and np.allclose(self.drone_pos, self.stations[idx],
-                                                                          atol=1e-2):
+        if not self.is_landing and abs(self.drone_height - self.target_height) < HEIGHT_ATOL:
+            # Проверяем — дрон на станции (с расширенным допуском)?
+            for idx, (st, height) in enumerate(zip(self.stations, self.station_heights)):
+                if abs(self.drone_height - height) < HEIGHT_ATOL and np.allclose(self.drone_pos, st,
+                                                                                 atol=POSITION_ATOL):
+                    self.drone_pos = np.array(st)  # Жёстко прилипнуть к центру станции
+                    self.drone_height = height  # Жёстко прилипнуть к высоте станции
                     self.update_log(f"Дрон находится на высоте станции {idx + 1}: {height} м. Инициируется зарядка.")
                     self.charge_at_station(idx)
                     return [self.drone_icon]
             # Если не на станции — это был подъём после зарядки, продолжаем маршрут
+            self.drone_height = float(self.entries['drone_height'].get())  # Жёстко вернуть рабочую высоту
             self.update_log("Подъём/посадка завершён: дрон не на станции, продолжаем маршрут.")
             self.start_animation()
             return [self.drone_icon]
@@ -1423,13 +1430,14 @@ class Simulation:
         """
         Корректная обработка достижения точки маршрута:
         - Если следующая точка — док-станция: посадка, зарядка, подъем, затем движение.
-        - Между всеми точками полет — только на рабочей высоте.
+        - Между всеми точками — только горизонтальный полет на рабочей высоте.
         """
         self.update_log(
             f"[DEBUG] handle_arrival: drone_pos={self.drone_pos}, drone_height={self.drone_height}, target_pos={self.target_pos}, target_height={getattr(self, 'target_height', 'N/A')}")
         if self.is_charging or self.is_landing:
             return
 
+        # Жёстко прилипнуть к точке маршрута (чтобы не было "плавающих" координат)
         self.drone_pos = self.target_pos.copy()
         self.motion_controller.set_position(self.drone_pos * self.cell_size)
         self.motion_controller.set_velocity([0, 0])
@@ -1451,15 +1459,17 @@ class Simulation:
         # Является ли точка станцией?
         is_station = False
         target_station_idx = None
+        POSITION_ATOL = 0.05
         for i, st in enumerate(self.stations):
-            if np.allclose(self.target_pos, st, atol=1e-2):
+            if np.allclose(self.target_pos, st, atol=POSITION_ATOL):
                 is_station = True
                 target_station_idx = i
                 break
 
         if is_station:
+            HEIGHT_ATOL = 0.2
             # Если не на высоте станции — посадка
-            if abs(self.drone_height - self.station_heights[target_station_idx]) > 1e-2:
+            if abs(self.drone_height - self.station_heights[target_station_idx]) > HEIGHT_ATOL:
                 self.is_landing = True
                 self.target_height = self.station_heights[target_station_idx]
                 self.update_log(f"Дрон прибыл к станции {target_station_idx + 1}, выполняет посадку.")
@@ -2161,19 +2171,20 @@ class Simulation:
 
     def charge_at_station(self, station_idx: int):
         """
-        Реалистичная зарядка дрона на док-станции с учетом фаз CC и CV и обновлением мини-графика.
-        Зарядка выполняется КАЖДЫЙ раз, когда дрон прилетает на станцию по маршруту.
-        После зарядки дрон строго по маршруту продолжает выполнение миссии.
+        Зарядка дрона на док-станции (каждый раз по маршруту).
+        Нет запретов на повторную зарядку!
         """
         self.update_log(
-            f"[DEBUG] charge_at_station: drone_pos={self.drone_pos}, drone_height={self.drone_height}, target_pos={self.target_pos}, target_height={getattr(self, 'target_height', 'N/A')}")
+            f"[DEBUG] charge_at_station: drone_pos={self.drone_pos}, drone_height={self.drone_height}, target_pos={self.target_pos}, target_height={getattr(self, 'target_height', 'N/A')}"
+        )
 
         if self.is_charging:
             self.update_log("Зарядка уже активна. Повторная зарядка невозможна.")
             return
 
-        # Проверка высоты — зарядка возможна только на высоте станции!
-        if abs(self.drone_height - self.station_heights[station_idx]) >= 1e-2:
+        # === ПОПРАВКА: увеличим допуск для высоты станции ===
+        HEIGHT_ATOL = 0.2
+        if abs(self.drone_height - self.station_heights[station_idx]) >= HEIGHT_ATOL:
             self.update_log(f"Ошибка: Зарядка возможна только на высоте станции {station_idx + 1}.")
             return
 
