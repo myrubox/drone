@@ -1360,6 +1360,10 @@ class Simulation:
                 on_station = np.allclose(self.drone_pos, np.array(st, dtype=float), atol=1e-6)
                 at_station_height = np.isclose(self.drone_height, height, atol=1e-6)
                 if on_station and at_station_height:
+                    # --- Исправление: привязка координат дрона к станции и логгирование ---
+                    self.drone_pos = np.array(st, dtype=float)
+                    self.motion_controller.set_position(self.drone_pos * self.cell_size)
+                    print(f"[perform_landing] drone_pos set to station {idx + 1}: {self.drone_pos}")
                     # Зарядка только если не было зарядки на этой итерации!
                     if not hasattr(self, "just_charged") or not self.just_charged:
                         self.update_log(
@@ -1382,8 +1386,10 @@ class Simulation:
             # Движение по вертикали
             self.motion_controller.set_axis('vertical')
             curr_height = self.drone_height
-            self.motion_controller.set_position([0, curr_height])
-            self.motion_controller.set_target([0, self.target_height])
+            # --- Исправление: используем координаты дрона, а не [0, ...] ---
+            current_xy = self.drone_pos * self.cell_size
+            self.motion_controller.set_position(np.array([current_xy[0], curr_height]))
+            self.motion_controller.set_target(np.array([current_xy[0], self.target_height]))
             current_time = time.time()
             real_delta_time = current_time - getattr(self, 'last_update_time', current_time)
             self.last_update_time = current_time
@@ -2263,6 +2269,11 @@ class Simulation:
         self.remaining_capacity_watt_hours = self.BATTERY_CAPACITY_WATT_HOURS
         self.is_charging = False
         self.plot_charge_graph()
+        # --- Исправление: привязка координат дрона к станции ---
+        self.drone_pos = np.array(self.stations[station_idx])
+        self.drone_height = self.station_heights[station_idx]
+        self.motion_controller.set_position(self.drone_pos * self.cell_size)
+        print(f"[complete_charge] drone_pos={self.drone_pos}, station_idx={station_idx}")
         self.target_height = float(self.entries['drone_height'].get())
         self.is_landing = True
 
